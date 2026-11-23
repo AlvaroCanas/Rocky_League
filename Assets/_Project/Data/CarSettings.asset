@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04887820e8be93e4b9249dcd92585298, type: 3}
+  m_Name: CarSettings
+  m_EditorClassIdentifier: RockyLeague::RockyLeague.Car.CarSettings
+  _mass: 180
+  _centerOfMassOffset: {x: 0, y: -0.15, z: 0}
+  _maxAngularSpeed: 5.5
+  _maxDriveSpeed: 14
+  _throttleAcceleration: 16
+  _accelerationAtMaxSpeed: 0.1
+  _brakeDeceleration: 35
+  _coastDeceleration: 5
+  _maxYawRate: 2.6
+  _steerBySpeed:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0.65
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _lateralGrip: 15
+  _handbrakeLateralGrip: 2
+  _stickyAcceleration: 5
+  _groundCheckDistance: 0.12
+  _minGroundedWheels: 3
+  _groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
