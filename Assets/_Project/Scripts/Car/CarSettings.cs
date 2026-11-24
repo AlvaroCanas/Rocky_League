@@ -1,0 +1,76 @@
+using UnityEngine;
+
+namespace RockyLeague.Car
+{
+    /// <summary>
+    /// Tuning data of a car, kept apart from the logic that uses it.
+    /// Being a ScriptableObject, several cars (player and bots) can share one asset
+    /// and values can be tweaked in the editor without touching code.
+    /// Default values are loosely based on Rocket League, in meters (1 uu = 1 cm).
+    /// </summary>
+    [CreateAssetMenu(fileName = "CarSettings", menuName = "Rocky League/Car Settings")]
+    public sealed class CarSettings : ScriptableObject
+    {
+        [Header("Rigidbody")]
+        [SerializeField, Min(0.1f)] private float _mass = 180f;
+        [SerializeField, Tooltip("Offset from the collider centre. Lower = harder to flip over.")]
+        private Vector3 _centerOfMassOffset = new Vector3(0f, -0.15f, 0f);
+        [SerializeField, Min(0.1f), Tooltip("Max angular speed in rad/s.")]
+        private float _maxAngularSpeed = 5.5f;
+
+        [Header("Driving (m/s, m/s²)")]
+        [SerializeField, Min(0.1f)] private float _maxDriveSpeed = 14f;
+        [SerializeField, Min(0f)] private float _throttleAcceleration = 16f;
+        [SerializeField, Range(0f, 1f), Tooltip("Fraction of the acceleration left when reaching max speed.")]
+        private float _accelerationAtMaxSpeed = 0.1f;
+        [SerializeField, Min(0f), Tooltip("Deceleration when throttle opposes the movement.")]
+        private float _brakeDeceleration = 35f;
+        [SerializeField, Min(0f), Tooltip("Deceleration with no throttle.")]
+        private float _coastDeceleration = 5f;
+
+        [Header("Steering")]
+        [SerializeField, Min(0f), Tooltip("Yaw rate in rad/s at full steer.")]
+        private float _maxYawRate = 2.6f;
+        [SerializeField, Tooltip("Steering factor (Y) by normalized forward speed (X, 0..1).")]
+        private AnimationCurve _steerBySpeed = new AnimationCurve(
+            new Keyframe(0f, 0f),
+            new Keyframe(0.1f, 1f),
+            new Keyframe(1f, 0.65f));
+
+        [Header("Grip")]
+        [SerializeField, Min(0f), Tooltip("How fast sideways velocity is removed (1/s).")]
+        private float _lateralGrip = 15f;
+        [SerializeField, Min(0f), Tooltip("Lateral grip while the handbrake is held (drift).")]
+        private float _handbrakeLateralGrip = 2f;
+        [SerializeField, Min(0f), Tooltip("Acceleration pushing the car against the surface it drives on.")]
+        private float _stickyAcceleration = 5f;
+
+        [Header("Ground detection")]
+        [SerializeField, Min(0.01f), Tooltip("Ray length below the collider's bottom face.")]
+        private float _groundCheckDistance = 0.12f;
+        [SerializeField, Range(1, 4), Tooltip("Wheels touching a surface needed to be grounded.")]
+        private int _minGroundedWheels = 3;
+        [SerializeField] private LayerMask _groundLayers = ~0;
+
+        public float Mass => _mass;
+        public Vector3 CenterOfMassOffset => _centerOfMassOffset;
+        public float MaxAngularSpeed => _maxAngularSpeed;
+
+        public float MaxDriveSpeed => _maxDriveSpeed;
+        public float ThrottleAcceleration => _throttleAcceleration;
+        public float AccelerationAtMaxSpeed => _accelerationAtMaxSpeed;
+        public float BrakeDeceleration => _brakeDeceleration;
+        public float CoastDeceleration => _coastDeceleration;
+
+        public float MaxYawRate => _maxYawRate;
+        public float LateralGrip => _lateralGrip;
+        public float HandbrakeLateralGrip => _handbrakeLateralGrip;
+        public float StickyAcceleration => _stickyAcceleration;
+
+        public float GroundCheckDistance => _groundCheckDistance;
+        public int MinGroundedWheels => _minGroundedWheels;
+        public LayerMask GroundLayers => _groundLayers;
+
+        public float EvaluateSteerFactor(float normalizedSpeed) => _steerBySpeed.Evaluate(Mathf.Clamp01(normalizedSpeed));
+    }
+}
