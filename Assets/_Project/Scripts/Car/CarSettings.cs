@@ -45,6 +45,26 @@ namespace RockyLeague.Car
         [SerializeField, Min(0f), Tooltip("Acceleration pushing the car against the surface it drives on.")]
         private float _stickyAcceleration = 5f;
 
+        [Header("Boost")]
+        [SerializeField, Min(1f), Tooltip("Boost the tank holds when full.")]
+        private float _maxBoost = 100f;
+        [SerializeField, Range(0f, 1f), Tooltip("Fraction of the tank the car starts with (and gets back on kickoff).")]
+        private float _startingBoostFraction = 0.33f;
+        [SerializeField, Min(0f), Tooltip("Boost spent per second while boosting.")]
+        private float _boostConsumption = 33f;
+        [SerializeField, Min(0f), Tooltip("Boost recovered per second while not boosting.")]
+        private float _boostRecharge = 10f;
+        [SerializeField, Min(0f), Tooltip("Extra forward acceleration while boosting (m/s²).")]
+        private float _boostAcceleration = 12f;
+        [SerializeField, Min(0.1f), Tooltip("Speed cap while boosting (m/s). Must be above Max Drive Speed.")]
+        private float _maxBoostSpeed = 23f;
+
+        [Header("Jump")]
+        [SerializeField, Min(0f), Tooltip("Speed added along the surface normal when jumping (m/s).")]
+        private float _jumpSpeed = 5f;
+        [SerializeField, Min(0f), Tooltip("Seconds before the car can jump again.")]
+        private float _jumpCooldown = 1f;
+
         [Header("Ground detection")]
         [SerializeField, Min(0.01f), Tooltip("Ray length below the collider's bottom face.")]
         private float _groundCheckDistance = 0.12f;
@@ -66,6 +86,16 @@ namespace RockyLeague.Car
         public float LateralGrip => _lateralGrip;
         public float HandbrakeLateralGrip => _handbrakeLateralGrip;
         public float StickyAcceleration => _stickyAcceleration;
+
+        public float MaxBoost => _maxBoost;
+        public float StartingBoost => _maxBoost * _startingBoostFraction;
+        public float BoostConsumption => _boostConsumption;
+        public float BoostRecharge => _boostRecharge;
+        public float BoostAcceleration => _boostAcceleration;
+        public float MaxBoostSpeed => _maxBoostSpeed;
+
+        public float JumpSpeed => _jumpSpeed;
+        public float JumpCooldown => _jumpCooldown;
 
         public float GroundCheckDistance => _groundCheckDistance;
         public int MinGroundedWheels => _minGroundedWheels;

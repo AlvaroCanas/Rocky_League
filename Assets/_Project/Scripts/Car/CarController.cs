@@ -22,12 +22,18 @@ namespace RockyLeague.Car
         private Rigidbody _body;
         private GroundSensor _groundSensor;
         private CarMotor _motor;
+        private CarBoost _boost;
+        private CarJump _jump;
         private StateMachine _stateMachine;
         private ICarInput _input = NullCarInput.Instance;
         private CarInputData _currentInput;
 
         public bool IsGrounded => _groundSensor != null && _groundSensor.IsGrounded;
         public float ForwardSpeed => _motor?.ForwardSpeed ?? 0f;
+
+        /// <summary>Boost left from 0 to 1, for the UI.</summary>
+        public float NormalizedBoost => _boost?.NormalizedAmount ?? 0f;
+        public bool IsBoosting => _boost != null && _boost.IsBoosting;
 
         /// <summary>Exposes the current state for debugging and UI; not meant to be changed from outside.</summary>
         public IState CurrentState => _stateMachine?.CurrentState;
@@ -53,6 +59,8 @@ namespace RockyLeague.Car
 
             _groundSensor = GroundSensor.FromBoxCollider(GetComponent<BoxCollider>(), _settings);
             _motor = new CarMotor(_body, _settings, _groundSensor);
+            _boost = new CarBoost(_body, _settings, _groundSensor);
+            _jump = new CarJump(_body, _settings, _groundSensor);
             _stateMachine = BuildStateMachine();
         }
 
@@ -65,9 +73,9 @@ namespace RockyLeague.Car
 
         private StateMachine BuildStateMachine()
         {
-            var machine = new StateMachine();
-            var grounded = new GroundedCarState(_motor, () => _currentInput);
-            var airborne = new AirborneCarState();
+            StateMachine machine = new StateMachine();
+            GroundedCarState grounded = new GroundedCarState(_motor, _boost, _jump, () => _currentInput);
+            AirborneCarState airborne = new AirborneCarState(_boost, _jump, () => _currentInput);
 
             machine.AddTransition(grounded, airborne, () => !_groundSensor.IsGrounded);
             machine.AddTransition(airborne, grounded, () => _groundSensor.IsGrounded);
