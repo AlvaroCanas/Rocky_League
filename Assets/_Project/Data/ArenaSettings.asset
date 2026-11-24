@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7000301070c048c6a17ab1a8f102f823, type: 3}
+  m_Name: ArenaSettings
+  m_EditorClassIdentifier: RockyLeague::RockyLeague.Arena.ArenaSettings
+  _width: 40
+  _length: 60
+  _wallHeight: 12
+  _wallThickness: 2
+  _goalWidth: 10
+  _goalHeight: 4
+  _goalDepth: 5
+  _wallBounciness: 0.5

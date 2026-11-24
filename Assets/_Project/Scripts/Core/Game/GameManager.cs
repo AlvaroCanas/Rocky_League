@@ -17,7 +17,7 @@ namespace RockyLeague.Core.Game
     {
         // Scene names must be in File > Build Profiles > Scene List.
         [SerializeField] private string _mainMenuScene = "MainMenu";
-        [SerializeField] private string _matchScene = "CarSandbox"; // placeholder until a Gameplay scene exists
+        [SerializeField] private string _matchScene = "Match";
         [SerializeField] private string _trainingScene = "Training";
 
         private StateMachine _stateMachine;

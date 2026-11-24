@@ -270,7 +270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RockyLeague::RockyLeague.Core.Game.GameManager
   _mainMenuScene: MainMenu
-  _matchScene: CarSandbox
+  _matchScene: Match
   _trainingScene: Training
 --- !u!4 &349264825
 Transform:
