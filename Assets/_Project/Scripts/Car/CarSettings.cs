@@ -59,6 +59,12 @@ namespace RockyLeague.Car
         [SerializeField, Min(0.1f), Tooltip("Speed cap while boosting (m/s). Must be above Max Drive Speed.")]
         private float _maxBoostSpeed = 23f;
 
+        [Header("Jump")]
+        [SerializeField, Min(0f), Tooltip("Speed added along the surface normal when jumping (m/s).")]
+        private float _jumpSpeed = 5f;
+        [SerializeField, Min(0f), Tooltip("Seconds before the car can jump again.")]
+        private float _jumpCooldown = 1f;
+
         [Header("Ground detection")]
         [SerializeField, Min(0.01f), Tooltip("Ray length below the collider's bottom face.")]
         private float _groundCheckDistance = 0.12f;
@@ -87,6 +93,9 @@ namespace RockyLeague.Car
         public float BoostRecharge => _boostRecharge;
         public float BoostAcceleration => _boostAcceleration;
         public float MaxBoostSpeed => _maxBoostSpeed;
+
+        public float JumpSpeed => _jumpSpeed;
+        public float JumpCooldown => _jumpCooldown;
 
         public float GroundCheckDistance => _groundCheckDistance;
         public int MinGroundedWheels => _minGroundedWheels;

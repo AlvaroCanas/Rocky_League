@@ -23,6 +23,7 @@ namespace RockyLeague.Car
         private GroundSensor _groundSensor;
         private CarMotor _motor;
         private CarBoost _boost;
+        private CarJump _jump;
         private StateMachine _stateMachine;
         private ICarInput _input = NullCarInput.Instance;
         private CarInputData _currentInput;
@@ -59,6 +60,7 @@ namespace RockyLeague.Car
             _groundSensor = GroundSensor.FromBoxCollider(GetComponent<BoxCollider>(), _settings);
             _motor = new CarMotor(_body, _settings, _groundSensor);
             _boost = new CarBoost(_body, _settings, _groundSensor);
+            _jump = new CarJump(_body, _settings, _groundSensor);
             _stateMachine = BuildStateMachine();
         }
 
@@ -72,8 +74,8 @@ namespace RockyLeague.Car
         private StateMachine BuildStateMachine()
         {
             StateMachine machine = new StateMachine();
-            GroundedCarState grounded = new GroundedCarState(_motor, _boost, () => _currentInput);
-            AirborneCarState airborne = new AirborneCarState(_boost);
+            GroundedCarState grounded = new GroundedCarState(_motor, _boost, _jump, () => _currentInput);
+            AirborneCarState airborne = new AirborneCarState(_boost, _jump, () => _currentInput);
 
             machine.AddTransition(grounded, airborne, () => !_groundSensor.IsGrounded);
             machine.AddTransition(airborne, grounded, () => _groundSensor.IsGrounded);
