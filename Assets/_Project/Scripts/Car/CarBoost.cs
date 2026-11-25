@@ -63,6 +63,13 @@ namespace RockyLeague.Car
             }
         }
 
+        /// <summary>Back to the starting amount of boost (used when the match restarts).</summary>
+        public void Refill()
+        {
+            IsBoosting = false;
+            Amount = _settings.StartingBoost;
+        }
+
         /// <summary>Only recharges. For states where boosting is not allowed (airborne).</summary>
         public void Recharge(float deltaTime)
         {
