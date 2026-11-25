@@ -11,8 +11,8 @@ namespace RockyLeague.Arena
     /// geometry consistent with the settings: changing the field size moves walls,
     /// goals and kickoff spots together. In the editor the layout is shown with gizmos.
     ///
-    /// It also answers questions about the layout (goal centres, kickoff spots),
-    /// which the match flow and the AI will need.
+    /// It also creates one <see cref="Goal"/> trigger per goal and answers questions
+    /// about the layout (goals, goal centres, kickoff spots) for the match flow and the AI.
     /// </summary>
     public sealed class ArenaBuilder : MonoBehaviour
     {
@@ -27,8 +27,16 @@ namespace RockyLeague.Arena
         private bool _showCeiling;
 
         private PhysicsMaterial _wallPhysics;
+        private Goal _blueGoal;
+        private Goal _orangeGoal;
 
         public ArenaSettings Settings => _settings;
+
+        /// <summary>The goal that <paramref name="team"/> defends. Available after Awake.</summary>
+        public Goal GetGoal(Team team)
+        {
+            return team == Team.Blue ? _blueGoal : _orangeGoal;
+        }
 
         /// <summary>Centre of the opening of the goal that <paramref name="team"/> defends.</summary>
         public Vector3 GetGoalCenter(Team team)
@@ -103,6 +111,31 @@ namespace RockyLeague.Arena
 
             BuildEnd(Team.Blue, _blueGoalMaterial);
             BuildEnd(Team.Orange, _orangeGoalMaterial);
+
+            _blueGoal = CreateGoalTrigger(Team.Blue);
+            _orangeGoal = CreateGoalTrigger(Team.Orange);
+        }
+
+        /// <summary>Invisible volume inside the goal box, from the goal line margin to the back of the net.</summary>
+        private Goal CreateGoalTrigger(Team defendingTeam)
+        {
+            float l = _settings.Length;
+            float boxDepth = _settings.WallThickness + _settings.GoalDepth;
+            float margin = _settings.GoalLineMargin;
+            float depth = boxDepth - margin;
+            float z = GoalSide(defendingTeam) * (l * 0.5f + margin + depth * 0.5f);
+
+            GameObject zone = new GameObject($"{defendingTeam}Goal");
+            zone.transform.SetParent(transform, false);
+            zone.transform.localPosition = new Vector3(0f, _settings.GoalHeight * 0.5f, z);
+
+            BoxCollider box = zone.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(_settings.GoalWidth, _settings.GoalHeight, depth);
+
+            Goal goal = zone.AddComponent<Goal>();
+            goal.Initialize(defendingTeam);
+            return goal;
         }
 
         /// <summary>End wall with the goal opening, plus the goal box behind it.</summary>
