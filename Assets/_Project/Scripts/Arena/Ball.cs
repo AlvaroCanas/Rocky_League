@@ -1,3 +1,4 @@
+using RockyLeague.Core;
 using UnityEngine;
 
 namespace RockyLeague.Arena
@@ -11,7 +12,7 @@ namespace RockyLeague.Arena
     /// ScriptableObject (unlike cars, there is nothing to share: KISS / YAGNI).
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(SphereCollider))]
-    public sealed class Ball : MonoBehaviour
+    public sealed class Ball : MonoBehaviour, IResettable
     {
         // Radius of Unity's built-in sphere mesh at scale 1.
         private const float UnitSphereRadius = 0.5f;
@@ -32,6 +33,8 @@ namespace RockyLeague.Arena
         [SerializeField, Min(0f)] private float _angularDamping = 0.1f;
 
         private Rigidbody _body;
+        private SphereCollider _collider;
+        private Renderer[] _renderers;
         private Vector3 _kickoffPosition;
 
         public float Radius => _radius;
@@ -39,21 +42,42 @@ namespace RockyLeague.Arena
         public Vector3 Velocity => _body.linearVelocity;
 
         /// <summary>
-        /// Puts the ball back at the centre spot, completely stopped.
-        /// Will be called by the match flow after every goal and at the start.
+        /// Makes the ball disappear (after a goal): invisible, without collisions and frozen,
+        /// so nothing can touch it while the goal is celebrated.
         /// </summary>
-        public void ResetToKickoff()
+        public void Hide()
         {
             _body.linearVelocity = Vector3.zero;
             _body.angularVelocity = Vector3.zero;
+            _body.isKinematic = true;
+            SetPresent(false);
+        }
+
+        /// <summary>
+        /// Puts the ball back at the centre spot, completely stopped and visible again.
+        /// Called by the match flow after every goal.
+        /// </summary>
+        public void ResetToKickoff()
+        {
+            // Velocity cannot be set on a kinematic body; a hidden ball is already stopped.
+            if (!_body.isKinematic)
+            {
+                _body.linearVelocity = Vector3.zero;
+                _body.angularVelocity = Vector3.zero;
+            }
+
             _body.position = _kickoffPosition;
             transform.position = _kickoffPosition;
+            _body.isKinematic = false;
+            SetPresent(true);
         }
 
         private void Awake()
         {
             _body = GetComponent<Rigidbody>();
-            ConfigureShape(GetComponent<SphereCollider>());
+            _collider = GetComponent<SphereCollider>();
+            _renderers = GetComponentsInChildren<Renderer>();
+            ConfigureShape(_collider);
             ConfigureRigidbody();
 
             // Wherever the ball is placed in the scene is its kickoff spot.
@@ -66,6 +90,15 @@ namespace RockyLeague.Arena
             if (velocity.sqrMagnitude > _maxSpeed * _maxSpeed)
             {
                 _body.linearVelocity = velocity.normalized * _maxSpeed;
+            }
+        }
+
+        private void SetPresent(bool present)
+        {
+            _collider.enabled = present;
+            foreach (Renderer meshRenderer in _renderers)
+            {
+                meshRenderer.enabled = present;
             }
         }
 

@@ -63,6 +63,12 @@ namespace RockyLeague.Car
             }
         }
 
+        /// <summary>Makes the jump available again (used when the match restarts).</summary>
+        public void ResetCooldown()
+        {
+            _cooldownLeft = 0f;
+        }
+
         private void Jump()
         {
             // VelocityChange: changes the speed directly, ignoring the mass.

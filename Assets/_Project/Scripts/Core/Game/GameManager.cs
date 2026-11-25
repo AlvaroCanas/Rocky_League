@@ -4,9 +4,12 @@ using UnityEngine;
 namespace RockyLeague.Core.Game
 {
     /// <summary>
-    /// Application-level flow: switches between the main menu, a match and the
-    /// training mode. It owns a <see cref="StateMachine"/> (State pattern) where each
-    /// state is a scene.
+    /// Application-level flow: switches between the main menu, the mode selection,
+    /// a match and the training mode. It owns a <see cref="StateMachine"/> (State pattern)
+    /// where each state is a scene.
+    ///
+    /// It also carries the <see cref="MatchConfig"/> chosen in the mode selection to the
+    /// match scene, since it is the one object that survives scene changes.
     ///
     /// It is a Singleton on purpose: it is the one object that must survive scene
     /// changes and be reachable from any of them. To keep it from becoming a God Object
@@ -17,19 +20,32 @@ namespace RockyLeague.Core.Game
     {
         // Scene names must be in File > Build Profiles > Scene List.
         [SerializeField] private string _mainMenuScene = "MainMenu";
+        [SerializeField] private string _playModeScene = "PlayMode";
         [SerializeField] private string _matchScene = "Match";
         [SerializeField] private string _trainingScene = "Training";
 
         private StateMachine _stateMachine;
         private SceneState _mainMenuState;
+        private SceneState _playModeState;
         private SceneState _matchState;
         private SceneState _trainingState;
 
         public static GameManager Instance { get; private set; }
 
+        /// <summary>Configuration of the match being played, or null if none was requested yet.</summary>
+        public MatchConfig CurrentMatchConfig { get; private set; }
+
         public void GoToMainMenu() => GoTo(_mainMenuState);
 
-        public void StartMatch() => GoTo(_matchState);
+        public void GoToPlayMode() => GoTo(_playModeState);
+
+        public void StartMatch(MatchConfig config)
+        {
+            if (config == null) throw new System.ArgumentNullException(nameof(config));
+
+            CurrentMatchConfig = config;
+            GoTo(_matchState);
+        }
 
         public void StartTraining() => GoTo(_trainingState);
 
@@ -48,6 +64,7 @@ namespace RockyLeague.Core.Game
             DontDestroyOnLoad(gameObject);
 
             _mainMenuState = new SceneState(_mainMenuScene);
+            _playModeState = new SceneState(_playModeScene);
             _matchState = new SceneState(_matchScene);
             _trainingState = new SceneState(_trainingScene);
 

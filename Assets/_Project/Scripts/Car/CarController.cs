@@ -1,5 +1,6 @@
 using RockyLeague.Car.Inputs;
 using RockyLeague.Car.States;
+using RockyLeague.Core;
 using RockyLeague.Core.StateMachines;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ namespace RockyLeague.Car
     /// <see cref="ICarInput"/> on the same GameObject, and otherwise receives no input.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(BoxCollider))]
-    public sealed class CarController : MonoBehaviour
+    public sealed class CarController : MonoBehaviour, IResettable
     {
         [SerializeField] private CarSettings _settings;
 
@@ -27,6 +28,8 @@ namespace RockyLeague.Car
         private StateMachine _stateMachine;
         private ICarInput _input = NullCarInput.Instance;
         private CarInputData _currentInput;
+        private Vector3 _kickoffPosition;
+        private Quaternion _kickoffRotation;
 
         public bool IsGrounded => _groundSensor != null && _groundSensor.IsGrounded;
         public float ForwardSpeed => _motor?.ForwardSpeed ?? 0f;
@@ -40,6 +43,28 @@ namespace RockyLeague.Car
 
         public void SetInput(ICarInput input) => _input = input ?? NullCarInput.Instance;
 
+        /// <summary>
+        /// Puts the car back where it started the match: stopped, with full boost and the jump
+        /// ready. Called by the match flow after every goal.
+        /// </summary>
+        public void ResetToKickoff()
+        {
+            // Nothing to reset if the car never finished setting itself up (no settings assigned).
+            if (_body == null)
+            {
+                return;
+            }
+
+            _body.linearVelocity = Vector3.zero;
+            _body.angularVelocity = Vector3.zero;
+            _body.position = _kickoffPosition;
+            _body.rotation = _kickoffRotation;
+            transform.SetPositionAndRotation(_kickoffPosition, _kickoffRotation);
+
+            _boost.Refill();
+            _jump.ResetCooldown();
+        }
+
         private void Awake()
         {
             if (_settings == null)
@@ -51,6 +76,10 @@ namespace RockyLeague.Car
 
             _body = GetComponent<Rigidbody>();
             ConfigureRigidbody(GetComponent<BoxCollider>());
+
+            // Wherever the car is placed in the scene is its kickoff spot (same idea as the ball).
+            _kickoffPosition = transform.position;
+            _kickoffRotation = transform.rotation;
 
             if (TryGetComponent(out ICarInput localInput))
             {
