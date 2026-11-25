@@ -109,6 +109,15 @@ namespace RockyLeague.AI
             return FieldCenter + local;
         }
 
+        /// <summary>True if the point is closer than <paramref name="margin"/> to a side or end wall.</summary>
+        public bool IsNearWall(Vector3 point, float margin)
+        {
+            Vector3 local = point - FieldCenter;
+            float toSideWall = _arenaSettings.Width * 0.5f - Mathf.Abs(local.x);
+            float toEndWall = _arenaSettings.Length * 0.5f - Mathf.Abs(local.z);
+            return toSideWall < margin || toEndWall < margin;
+        }
+
         private static Vector3 Flat(Vector3 v)
         {
             return new Vector3(v.x, 0f, v.z);
