@@ -29,7 +29,7 @@ namespace RockyLeague.UI
             _trainingButton.onClick.RemoveListener(OnTrainingClicked);
         }
 
-        private void OnPlayClicked() => GameManager.Instance.StartMatch();
+        private void OnPlayClicked() => GameManager.Instance.GoToPlayMode();
 
         private void OnTrainingClicked() => GameManager.Instance.StartTraining();
     }

@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/_Project/Scenes/MainMenu.unity
     guid: 69b279b64861aea49a770cc3b07a1df5
   - enabled: 1
+    path: Assets/_Project/Scenes/PlayMode.unity
+    guid: 19e542f647f151640bdc6ff91d69057b
+  - enabled: 1
     path: Assets/_Project/Scenes/Match.unity
     guid: 855a2f6f682d4c1e8fe6e2b6fb61c7be
   - enabled: 1
