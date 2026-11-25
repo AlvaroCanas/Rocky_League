@@ -10,11 +10,11 @@ namespace RockyLeague.Match.States
     /// </summary>
     public sealed class PlayingState : IState
     {
-        private readonly MatchScore _score;
+        private readonly MatchClock _clock;
 
-        public PlayingState(MatchScore score)
+        public PlayingState(MatchClock clock)
         {
-            _score = score ?? throw new ArgumentNullException(nameof(score));
+            _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         }
 
         public void Enter()
@@ -23,7 +23,7 @@ namespace RockyLeague.Match.States
 
         public void Tick(float deltaTime)
         {
-            _score.TickTime(deltaTime);
+            _clock.Tick(deltaTime);
         }
 
         public void Exit()

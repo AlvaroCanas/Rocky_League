@@ -9,6 +9,7 @@ namespace RockyLeague.Match
     {
         Countdown,
         Playing,
+        GoalScored,
         MatchEnd
     }
 }

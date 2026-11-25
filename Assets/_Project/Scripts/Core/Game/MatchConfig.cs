@@ -13,7 +13,7 @@ namespace RockyLeague.Core.Game
     ///
     /// 1v1 and 2v2 are not different code, just different configurations (OCP):
     /// a new mode is a new factory method here, not a new scene or a new class.
-    /// What changes DURING the match (score, time left) is not here: see MatchScore.
+    /// What changes DURING the match is not here: the clock is the MatchClock and the goals are the ScoreKeeper.
     /// </summary>
     public sealed class MatchConfig
     {
