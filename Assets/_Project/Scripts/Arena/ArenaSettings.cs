@@ -23,6 +23,8 @@ namespace RockyLeague.Arena
         [SerializeField, Min(1f)] private float _goalHeight = 4f;
         [SerializeField, Min(0.5f), Tooltip("How deep the net is behind the goal line.")]
         private float _goalDepth = 5f;
+        [SerializeField, Min(0f), Tooltip("How far behind the goal line a goal starts counting. Use the ball's diameter so the whole ball must cross.")]
+        private float _goalLineMargin = 2f;
 
         [Header("Surfaces")]
         [SerializeField, Range(0f, 1f), Tooltip("How much the ball bounces off walls.")]
@@ -36,6 +38,7 @@ namespace RockyLeague.Arena
         public float GoalWidth => _goalWidth;
         public float GoalHeight => _goalHeight;
         public float GoalDepth => _goalDepth;
+        public float GoalLineMargin => _goalLineMargin;
 
         public float WallBounciness => _wallBounciness;
 
@@ -44,6 +47,7 @@ namespace RockyLeague.Arena
         {
             _goalWidth = Mathf.Min(_goalWidth, _width - 2f * _wallThickness);
             _goalHeight = Mathf.Min(_goalHeight, _wallHeight - 1f);
+            _goalLineMargin = Mathf.Min(_goalLineMargin, _wallThickness + _goalDepth - 0.5f);
         }
     }
 }
