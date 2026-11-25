@@ -19,4 +19,5 @@ MonoBehaviour:
   _goalWidth: 10
   _goalHeight: 4
   _goalDepth: 5
+  _goalLineMargin: 2
   _wallBounciness: 0.5
