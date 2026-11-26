@@ -47,6 +47,12 @@ namespace RockyLeague.Car
         public bool IsReady => _cooldownLeft <= 0f;
 
         /// <summary>
+        /// True only on the physics step in which the button went from released to held, whether
+        /// or not the car was allowed to jump. Other states (like flipped) use it as "jump pressed".
+        /// </summary>
+        public bool JustPressed { get; private set; }
+
+        /// <summary>
         /// Updates the cooldown and the button tracking, and jumps if the button
         /// has just been pressed, jumping is allowed and the cooldown is over.
         /// </summary>
@@ -54,10 +60,10 @@ namespace RockyLeague.Car
         {
             _cooldownLeft = Mathf.Max(0f, _cooldownLeft - deltaTime);
 
-            bool justPressed = jumpHeld && !_wasJumpHeld;
+            JustPressed = jumpHeld && !_wasJumpHeld;
             _wasJumpHeld = jumpHeld;
 
-            if (justPressed && canJump && IsReady)
+            if (JustPressed && canJump && IsReady)
             {
                 Jump();
             }

@@ -20,7 +20,7 @@ MonoBehaviour:
   _accelerationAtMaxSpeed: 0.1
   _brakeDeceleration: 35
   _coastDeceleration: 5
-  _maxYawRate: 2.6
+  _maxYawRate: 2.1
   _steerBySpeed:
     serializedVersion: 2
     m_Curve:

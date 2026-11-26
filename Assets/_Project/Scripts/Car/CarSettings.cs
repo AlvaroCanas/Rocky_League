@@ -65,6 +65,26 @@ namespace RockyLeague.Car
         [SerializeField, Min(0f), Tooltip("Seconds before the car can jump again.")]
         private float _jumpCooldown = 1f;
 
+        [Header("Air control")]
+        [SerializeField, Min(0f), Tooltip("Max pitch speed in rad/s (nose up / down).")]
+        private float _airPitchSpeed = 3.6f;
+        [SerializeField, Min(0f), Tooltip("Max yaw speed in rad/s (nose left / right).")]
+        private float _airYawSpeed = 3.2f;
+        [SerializeField, Min(0f), Tooltip("Max roll speed in rad/s (lean left / right).")]
+        private float _airRollSpeed = 4.5f;
+        [SerializeField, Min(0f), Tooltip("How fast the spin changes towards the input, in rad/s per second.")]
+        private float _airControlAcceleration = 16f;
+        [SerializeField, Min(0f), Tooltip("How fast an axis slows down when there is no input on it, in rad/s per second.")]
+        private float _airControlDamping = 4f;
+
+        [Header("Flip recovery")]
+        [SerializeField, Min(0.5f), Tooltip("Speed of the hop (m/s) when flipping back onto the wheels. The spin is worked out from it, so the car lands about upright.")]
+        private float _recoveryHopSpeed = 3.5f;
+        [SerializeField, Min(0.01f), Tooltip("Radius (m) of the probe on each top corner that detects the car lying on a surface.")]
+        private float _flippedProbeRadius = 0.15f;
+        [SerializeField, Min(0f), Tooltip("Seconds the same face must rest on a surface before the car counts as flipped.")]
+        private float _flippedDelay = 0.2f;
+
         [Header("Ground detection")]
         [SerializeField, Min(0.01f), Tooltip("Ray length below the collider's bottom face.")]
         private float _groundCheckDistance = 0.12f;
@@ -96,6 +116,16 @@ namespace RockyLeague.Car
 
         public float JumpSpeed => _jumpSpeed;
         public float JumpCooldown => _jumpCooldown;
+
+        public float AirPitchSpeed => _airPitchSpeed;
+        public float AirYawSpeed => _airYawSpeed;
+        public float AirRollSpeed => _airRollSpeed;
+        public float AirControlAcceleration => _airControlAcceleration;
+        public float AirControlDamping => _airControlDamping;
+
+        public float RecoveryHopSpeed => _recoveryHopSpeed;
+        public float FlippedProbeRadius => _flippedProbeRadius;
+        public float FlippedDelay => _flippedDelay;
 
         public float GroundCheckDistance => _groundCheckDistance;
         public int MinGroundedWheels => _minGroundedWheels;
