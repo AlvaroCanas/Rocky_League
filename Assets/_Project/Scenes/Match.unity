@@ -179,7 +179,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 1500
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -954,9 +954,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: RockyLeague::RockyLeague.Arena.ArenaBuilder
   _settings: {fileID: 11400000, guid: b1781eb6f175497696b04b0c400cb014, type: 2}
   _floorMaterial: {fileID: 2100000, guid: 0ccf0cde81874984a993d2d0858806c3, type: 2}
-  _wallMaterial: {fileID: 2100000, guid: 135a2486e4834a848abf53aa89c18f74, type: 2}
+  _wallMaterial: {fileID: 2100000, guid: 9d1cd76a23a348b6958022607d5061cb, type: 2}
   _blueGoalMaterial: {fileID: 2100000, guid: d742a3b5354e4ec7b277083e1c78a9e7, type: 2}
   _orangeGoalMaterial: {fileID: 2100000, guid: ae8d73b31d294dfa88c8a01605e66ada, type: 2}
+  _trimMaterial: {fileID: 2100000, guid: f3794bdc98ca4572878e55f39be27a9d, type: 2}
+  _lineMaterial: {fileID: 2100000, guid: 9f36c6a9758a45d6969b765f3d6437f1, type: 2}
   _showCeiling: 0
 --- !u!1 &2000000011
 GameObject:
@@ -1140,7 +1142,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3145, guid: 3e9f2a7c1b8d4e6f9a0c5d7e1f2b3a46, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -4
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: 3145, guid: 3e9f2a7c1b8d4e6f9a0c5d7e1f2b3a46, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1769,7 +1771,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3145, guid: ac53ae12837948c9a691578a866d4539, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 4
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 3145, guid: ac53ae12837948c9a691578a866d4539, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1817,6 +1819,102 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3145, guid: ac53ae12837948c9a691578a866d4539, type: 3}
   m_PrefabInstance: {fileID: 2000000081}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2000000091
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2000000092}
+  - component: {fileID: 2000000093}
+  m_Layer: 0
+  m_Name: Environment
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2000000092
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000091}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2000000093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0c4436fae85476aad9925fe1a4defc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RockyLeague::RockyLeague.Environment.EnvironmentBuilder
+  _arena: {fileID: 2000000003}
+  _scoreKeeper: {fileID: 2000000023}
+  _baseMaterial: {fileID: 2100000, guid: 8fa2b0cbac544da8b29fd35f331c6a8f, type: 2}
+  _lampMaterial: {fileID: 2100000, guid: d29aad3d851345df85bcd7021b3bf2d8, type: 2}
+  _waterMaterial: {fileID: 2100000, guid: cd398124de8f46c8b6afdf7aea0a2c19, type: 2}
+  _seed: 2627
+--- !u!1 &2000000101
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2000000102}
+  - component: {fileID: 2000000103}
+  m_Layer: 0
+  m_Name: Atmosphere
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2000000102
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000101}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2000000103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000101}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90db1302a7824fd4a8dfc0efca681e12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RockyLeague::RockyLeague.Environment.AtmosphereController
+  _skybox: {fileID: 2100000, guid: 97c7e632448e40c983291f7707d7bc03, type: 2}
+  _sun: {fileID: 410087040}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1833,3 +1931,5 @@ SceneRoots:
   - {fileID: 2000000042}
   - {fileID: 2000000072}
   - {fileID: 2000000081}
+  - {fileID: 2000000092}
+  - {fileID: 2000000102}
