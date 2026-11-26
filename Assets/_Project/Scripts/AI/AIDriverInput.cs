@@ -32,10 +32,10 @@ namespace RockyLeague.AI
         private AIContext _context;
         private AIStuckRecovery _stuckRecovery;
         private StateMachine _brain;
-        private IState _attack;
-        private IState _defend;
-        private IState _clear;
-        private IState _reposition;
+        private AIAttackState _attack;
+        private AIDefendState _defend;
+        private AIClearState _clear;
+        private AIRepositionState _reposition;
         private IState _desiredState;
         private float _nextDecisionTime;
 
