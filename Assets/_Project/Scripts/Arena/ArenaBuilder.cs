@@ -1,11 +1,13 @@
+using RockyLeague.Core.Building;
 using UnityEngine;
 
 namespace RockyLeague.Arena
 {
     /// <summary>
     /// Builds the arena from an <see cref="ArenaSettings"/> asset when the scene starts:
-    /// floor, side walls, end walls with an opening for each goal, the goal boxes
-    /// and an invisible ceiling that keeps the ball inside.
+    /// floor, glass side walls, glass end walls with an opening for each goal, the goal
+    /// boxes, an invisible ceiling that keeps the ball inside, dark frames along the
+    /// edges of the glass and the lines painted on the field.
     ///
     /// Building it by code (instead of placing every wall by hand) keeps all the
     /// geometry consistent with the settings: changing the field size moves walls,
@@ -23,10 +25,25 @@ namespace RockyLeague.Arena
         [SerializeField] private Material _wallMaterial;
         [SerializeField] private Material _blueGoalMaterial;
         [SerializeField] private Material _orangeGoalMaterial;
+        [SerializeField, Tooltip("Frames along the edges of the glass walls.")]
+        private Material _trimMaterial;
+        [SerializeField, Tooltip("Lines painted on the field.")]
+        private Material _lineMaterial;
         [SerializeField, Tooltip("Show the ceiling (useful for debugging only).")]
         private bool _showCeiling;
 
+        // Field markings, in meters.
+        private const float LineWidth = 0.3f;
+        private const float LineThickness = 0.02f;
+        private const float CenterCircleRadius = 8f;
+        private const int CenterCircleSegments = 40;
+        private const float GoalAreaMargin = 5f;
+        private const float GoalAreaDepth = 10f;
+        // Glass panels: a frame post at least every this many meters along the side walls.
+        private const float MaxPanelLength = 15f;
+
         private PhysicsMaterial _wallPhysics;
+        private BlockBuilder _blocks;
         private Goal _blueGoal;
         private Goal _orangeGoal;
 
@@ -69,6 +86,7 @@ namespace RockyLeague.Arena
             }
 
             _wallPhysics = CreateWallPhysics();
+            _blocks = new BlockBuilder(transform);
             Build();
         }
 
@@ -97,20 +115,22 @@ namespace RockyLeague.Arena
 
             // Floor: top face at y = 0, long enough to cover the inside of both goals.
             float floorLength = l + 2f * (t + _settings.GoalDepth + t);
-            CreateBlock("Floor", new Vector3(0f, -t * 0.5f, 0f), new Vector3(w + 2f * t, t, floorLength), _floorMaterial);
+            _blocks.Solid("Floor", new Vector3(0f, -t * 0.5f, 0f), new Vector3(w + 2f * t, t, floorLength), _floorMaterial, _wallPhysics);
 
             // Ceiling: invisible lid so the ball cannot leave the arena.
-            GameObject ceiling = CreateBlock("Ceiling", new Vector3(0f, h + t * 0.5f, 0f), new Vector3(w + 2f * t, t, l + 2f * t), _wallMaterial);
+            GameObject ceiling = _blocks.Solid("Ceiling", new Vector3(0f, h + t * 0.5f, 0f), new Vector3(w + 2f * t, t, l + 2f * t), _wallMaterial, _wallPhysics);
             ceiling.GetComponent<MeshRenderer>().enabled = _showCeiling;
 
             // Side walls, along the whole length.
             float sideX = w * 0.5f + t * 0.5f;
             Vector3 sideSize = new Vector3(t, h, l + 2f * t);
-            CreateBlock("Wall_Left", new Vector3(-sideX, h * 0.5f, 0f), sideSize, _wallMaterial);
-            CreateBlock("Wall_Right", new Vector3(sideX, h * 0.5f, 0f), sideSize, _wallMaterial);
+            _blocks.Solid("Wall_Left", new Vector3(-sideX, h * 0.5f, 0f), sideSize, _wallMaterial, _wallPhysics);
+            _blocks.Solid("Wall_Right", new Vector3(sideX, h * 0.5f, 0f), sideSize, _wallMaterial, _wallPhysics);
 
             BuildEnd(Team.Blue, _blueGoalMaterial);
             BuildEnd(Team.Orange, _orangeGoalMaterial);
+            BuildFrames();
+            BuildFieldLines();
 
             _blueGoal = CreateGoalTrigger(Team.Blue);
             _orangeGoal = CreateGoalTrigger(Team.Orange);
@@ -156,38 +176,92 @@ namespace RockyLeague.Arena
             float pieceWidth = (w - gw) * 0.5f;
             float pieceX = gw * 0.5f + pieceWidth * 0.5f;
             Vector3 pieceSize = new Vector3(pieceWidth, h, t);
-            CreateBlock(prefix + "WallLeft", new Vector3(-pieceX, h * 0.5f, wallZ), pieceSize, _wallMaterial);
-            CreateBlock(prefix + "WallRight", new Vector3(pieceX, h * 0.5f, wallZ), pieceSize, _wallMaterial);
-            CreateBlock(prefix + "Lintel", new Vector3(0f, gh + (h - gh) * 0.5f, wallZ), new Vector3(gw, h - gh, t), _wallMaterial);
+            _blocks.Solid(prefix + "WallLeft", new Vector3(-pieceX, h * 0.5f, wallZ), pieceSize, _wallMaterial, _wallPhysics);
+            _blocks.Solid(prefix + "WallRight", new Vector3(pieceX, h * 0.5f, wallZ), pieceSize, _wallMaterial, _wallPhysics);
+            _blocks.Solid(prefix + "Lintel", new Vector3(0f, gh + (h - gh) * 0.5f, wallZ), new Vector3(gw, h - gh, t), _wallMaterial, _wallPhysics);
 
             // Goal box: from the goal line to the back of the net.
             float boxDepth = t + gd;
             float boxZ = side * (l * 0.5f + boxDepth * 0.5f);
             float goalSideX = gw * 0.5f + t * 0.5f;
             Vector3 goalSideSize = new Vector3(t, gh, boxDepth);
-            CreateBlock(prefix + "GoalLeft", new Vector3(-goalSideX, gh * 0.5f, boxZ), goalSideSize, goalMaterial);
-            CreateBlock(prefix + "GoalRight", new Vector3(goalSideX, gh * 0.5f, boxZ), goalSideSize, goalMaterial);
-            CreateBlock(prefix + "GoalRoof", new Vector3(0f, gh + t * 0.5f, boxZ), new Vector3(gw + 2f * t, t, boxDepth), goalMaterial);
+            _blocks.Solid(prefix + "GoalLeft", new Vector3(-goalSideX, gh * 0.5f, boxZ), goalSideSize, goalMaterial, _wallPhysics);
+            _blocks.Solid(prefix + "GoalRight", new Vector3(goalSideX, gh * 0.5f, boxZ), goalSideSize, goalMaterial, _wallPhysics);
+            _blocks.Solid(prefix + "GoalRoof", new Vector3(0f, gh + t * 0.5f, boxZ), new Vector3(gw + 2f * t, t, boxDepth), goalMaterial, _wallPhysics);
 
             float backZ = side * (l * 0.5f + boxDepth + t * 0.5f);
-            CreateBlock(prefix + "GoalBack", new Vector3(0f, (gh + t) * 0.5f, backZ), new Vector3(gw + 2f * t, gh + t, t), goalMaterial);
+            _blocks.Solid(prefix + "GoalBack", new Vector3(0f, (gh + t) * 0.5f, backZ), new Vector3(gw + 2f * t, gh + t, t), goalMaterial, _wallPhysics);
         }
 
-        private GameObject CreateBlock(string blockName, Vector3 localCenter, Vector3 size, Material material)
+        /// <summary>
+        /// Dark frames on the edges of the glass: a rail on top of every wall, posts along the
+        /// side walls that split them into panels and posts beside each goal. Without them a
+        /// transparent wall is hard to see.
+        /// </summary>
+        private void BuildFrames()
         {
-            GameObject block = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            block.name = blockName;
-            block.transform.SetParent(transform, false);
-            block.transform.localPosition = localCenter;
-            block.transform.localScale = size;
+            float w = _settings.Width;
+            float l = _settings.Length;
+            float h = _settings.WallHeight;
+            float t = _settings.WallThickness;
+            float frame = t + 0.3f;
+            float railY = h + 0.2f;
+            float sideX = w * 0.5f + t * 0.5f;
+            float endZ = l * 0.5f + t * 0.5f;
 
-            if (material != null)
+            _blocks.Decoration("Rail_Left", new Vector3(-sideX, railY, 0f), new Vector3(frame, 0.4f, l + 2f * t + 0.3f), _trimMaterial);
+            _blocks.Decoration("Rail_Right", new Vector3(sideX, railY, 0f), new Vector3(frame, 0.4f, l + 2f * t + 0.3f), _trimMaterial);
+            _blocks.Decoration("Rail_BlueEnd", new Vector3(0f, railY, -endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), _trimMaterial);
+            _blocks.Decoration("Rail_OrangeEnd", new Vector3(0f, railY, endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), _trimMaterial);
+
+            int panels = Mathf.CeilToInt(l / MaxPanelLength);
+            for (int i = 0; i <= panels; i++)
             {
-                block.GetComponent<MeshRenderer>().sharedMaterial = material;
+                float z = -endZ + i * (2f * endZ / panels);
+                _blocks.Decoration($"Post_Left_{i}", new Vector3(-sideX, h * 0.5f, z), new Vector3(frame, h, 0.5f), _trimMaterial);
+                _blocks.Decoration($"Post_Right_{i}", new Vector3(sideX, h * 0.5f, z), new Vector3(frame, h, 0.5f), _trimMaterial);
             }
 
-            block.GetComponent<BoxCollider>().sharedMaterial = _wallPhysics;
-            return block;
+            float goalPostX = _settings.GoalWidth * 0.5f;
+            foreach (float z in new[] { -endZ, endZ })
+            {
+                _blocks.Decoration("GoalPost", new Vector3(-goalPostX, h * 0.5f, z), new Vector3(0.5f, h, frame), _trimMaterial);
+                _blocks.Decoration("GoalPost", new Vector3(goalPostX, h * 0.5f, z), new Vector3(0.5f, h, frame), _trimMaterial);
+            }
+        }
+
+        /// <summary>Halfway line, centre circle and the area in front of each goal.</summary>
+        private void BuildFieldLines()
+        {
+            float y = LineThickness * 0.5f + 0.005f;
+            _blocks.Decoration("Line_Halfway", new Vector3(0f, y, 0f), new Vector3(_settings.Width, LineThickness, LineWidth), _lineMaterial);
+
+            float segmentLength = 2f * Mathf.PI * CenterCircleRadius / CenterCircleSegments + 0.05f;
+            for (int i = 0; i < CenterCircleSegments; i++)
+            {
+                float angle = i * 360f / CenterCircleSegments;
+                float radians = angle * Mathf.Deg2Rad;
+                Vector3 point = new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * CenterCircleRadius;
+                // Each piece lies along the tangent of the circle at its point.
+                Quaternion along = Quaternion.Euler(0f, -(angle + 90f), 0f);
+                _blocks.Decoration(PrimitiveType.Cube, "Line_Circle", point + Vector3.up * y, new Vector3(segmentLength, LineThickness, LineWidth), along, _lineMaterial);
+            }
+
+            BuildGoalArea(Team.Blue, y);
+            BuildGoalArea(Team.Orange, y);
+        }
+
+        private void BuildGoalArea(Team team, float y)
+        {
+            float side = GoalSide(team);
+            float halfWidth = _settings.GoalWidth * 0.5f + GoalAreaMargin;
+            float goalLineZ = side * _settings.Length * 0.5f;
+            float frontZ = goalLineZ - side * GoalAreaDepth;
+            float middleZ = (goalLineZ + frontZ) * 0.5f;
+
+            _blocks.Decoration($"Line_{team}Area_Front", new Vector3(0f, y, frontZ), new Vector3(2f * halfWidth, LineThickness, LineWidth), _lineMaterial);
+            _blocks.Decoration($"Line_{team}Area_Left", new Vector3(-halfWidth, y, middleZ), new Vector3(LineWidth, LineThickness, GoalAreaDepth), _lineMaterial);
+            _blocks.Decoration($"Line_{team}Area_Right", new Vector3(halfWidth, y, middleZ), new Vector3(LineWidth, LineThickness, GoalAreaDepth), _lineMaterial);
         }
 
         // Editor preview: the field outline and both goals, visible without pressing Play.
