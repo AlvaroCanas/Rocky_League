@@ -9,7 +9,7 @@ namespace RockyLeague.Car
     /// <summary>
     /// Unity entry point of a car. It wires the car's parts together (composition)
     /// and drives them from FixedUpdate:
-    /// input source -> state machine (Grounded / Airborne) -> motor -> Rigidbody.
+    /// input source -> state machine (Grounded / Airborne / Flipped) -> motor -> Rigidbody.
     ///
     /// It does not know who drives it: the input source is injected through
     /// <see cref="SetInput"/> (DIP). If none is injected, it looks for an
@@ -25,6 +25,9 @@ namespace RockyLeague.Car
         private CarMotor _motor;
         private CarBoost _boost;
         private CarJump _jump;
+        private CarAirControl _airControl;
+        private FlipSensor _flipSensor;
+        private CarRecovery _recovery;
         private StateMachine _stateMachine;
         private ICarInput _input = NullCarInput.Instance;
         private CarInputData _currentInput;
@@ -90,6 +93,9 @@ namespace RockyLeague.Car
             _motor = new CarMotor(_body, _settings, _groundSensor);
             _boost = new CarBoost(_body, _settings, _groundSensor);
             _jump = new CarJump(_body, _settings, _groundSensor);
+            _airControl = new CarAirControl(_body, _settings);
+            _flipSensor = FlipSensor.FromBoxCollider(GetComponent<BoxCollider>(), _settings);
+            _recovery = new CarRecovery(_body, _settings, _flipSensor);
             _stateMachine = BuildStateMachine();
         }
 
@@ -97,6 +103,7 @@ namespace RockyLeague.Car
         {
             _currentInput = _input.ReadInput();
             _groundSensor.Refresh();
+            _flipSensor.Refresh(Time.fixedDeltaTime);
             _stateMachine.Tick(Time.fixedDeltaTime);
         }
 
@@ -104,10 +111,18 @@ namespace RockyLeague.Car
         {
             StateMachine machine = new StateMachine();
             GroundedCarState grounded = new GroundedCarState(_motor, _boost, _jump, () => _currentInput);
-            AirborneCarState airborne = new AirborneCarState(_boost, _jump, () => _currentInput);
+            AirborneCarState airborne = new AirborneCarState(_boost, _jump, _airControl, () => _currentInput);
+            FlippedCarState flipped = new FlippedCarState(_boost, _jump, _recovery, () => _currentInput);
 
+            // For states with several exits the first transition that holds wins, so touching
+            // the ground is always checked before anything else.
             machine.AddTransition(grounded, airborne, () => !_groundSensor.IsGrounded);
+
             machine.AddTransition(airborne, grounded, () => _groundSensor.IsGrounded);
+            machine.AddTransition(airborne, flipped, () => _flipSensor.IsFlipped);
+
+            machine.AddTransition(flipped, grounded, () => _groundSensor.IsGrounded);
+            machine.AddTransition(flipped, airborne, () => _flipSensor.TouchingFace == CarFace.None);
 
             machine.ChangeState(airborne);
             return machine;
@@ -122,6 +137,10 @@ namespace RockyLeague.Car
             _body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         }
 
-        private void OnDrawGizmosSelected() => _groundSensor?.DrawGizmos();
+        private void OnDrawGizmosSelected()
+        {
+            _groundSensor?.DrawGizmos();
+            _flipSensor?.DrawGizmos();
+        }
     }
 }
