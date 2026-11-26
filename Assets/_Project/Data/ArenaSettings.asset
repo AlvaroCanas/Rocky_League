@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7000301070c048c6a17ab1a8f102f823, type: 3}
   m_Name: ArenaSettings
   m_EditorClassIdentifier: RockyLeague::RockyLeague.Arena.ArenaSettings
-  _width: 40
-  _length: 60
-  _wallHeight: 12
+  _width: 60
+  _length: 90
+  _wallHeight: 16
   _wallThickness: 2
-  _goalWidth: 10
-  _goalHeight: 4
-  _goalDepth: 5
+  _goalWidth: 14
+  _goalHeight: 5
+  _goalDepth: 6
   _goalLineMargin: 2
   _wallBounciness: 0.5
