@@ -5,9 +5,10 @@ namespace RockyLeague.Arena
 {
     /// <summary>
     /// Builds the arena from an <see cref="ArenaSettings"/> asset when the scene starts:
-    /// floor, glass side walls, glass end walls with an opening for each goal, the goal
-    /// boxes, an invisible ceiling that keeps the ball inside, dark frames along the
-    /// edges of the glass and the lines painted on the field.
+    /// floor, glass walls with an opening for each goal, corners cut at 45 degrees,
+    /// curved ramps where the floor meets the walls, tinted goal boxes with glowing frames,
+    /// an invisible ceiling that keeps the ball inside and frames along the glass.
+    /// The ramps and the field markings are built by their own classes.
     ///
     /// Building it by code (instead of placing every wall by hand) keeps all the
     /// geometry consistent with the settings: changing the field size moves walls,
@@ -29,16 +30,20 @@ namespace RockyLeague.Arena
         private Material _trimMaterial;
         [SerializeField, Tooltip("Lines painted on the field.")]
         private Material _lineMaterial;
+        [SerializeField, Tooltip("Lighter grass for the mowing stripes.")]
+        private Material _stripeMaterial;
+        [SerializeField, Tooltip("Curved ramps at the foot of the walls.")]
+        private Material _rampMaterial;
+        [SerializeField, Tooltip("Glowing blue: goal frame and rails on the blue half.")]
+        private Material _blueGlowMaterial;
+        [SerializeField, Tooltip("Glowing orange: goal frame and rails on the orange half.")]
+        private Material _orangeGlowMaterial;
         [SerializeField, Tooltip("Show the ceiling (useful for debugging only).")]
         private bool _showCeiling;
 
-        // Field markings, in meters.
-        private const float LineWidth = 0.3f;
-        private const float LineThickness = 0.02f;
-        private const float CenterCircleRadius = 8f;
-        private const int CenterCircleSegments = 40;
-        private const float GoalAreaMargin = 5f;
-        private const float GoalAreaDepth = 10f;
+        private const int RampSlats = 8;
+        private const float RampThickness = 0.5f;
+        private const float GoalFrameRadius = 0.3f;
         // Glass panels: a frame post at least every this many meters along the side walls.
         private const float MaxPanelLength = 15f;
 
@@ -129,8 +134,14 @@ namespace RockyLeague.Arena
 
             BuildEnd(Team.Blue, _blueGoalMaterial);
             BuildEnd(Team.Orange, _orangeGoalMaterial);
+            BuildCorners();
+            BuildRamps();
+            BuildGoalFrame(Team.Blue);
+            BuildGoalFrame(Team.Orange);
             BuildFrames();
-            BuildFieldLines();
+
+            FieldMarkingsBuilder markings = new FieldMarkingsBuilder(_blocks, _settings, _lineMaterial, _stripeMaterial);
+            markings.Build();
 
             _blueGoal = CreateGoalTrigger(Team.Blue);
             _orangeGoal = CreateGoalTrigger(Team.Orange);
@@ -209,10 +220,15 @@ namespace RockyLeague.Arena
             float sideX = w * 0.5f + t * 0.5f;
             float endZ = l * 0.5f + t * 0.5f;
 
-            _blocks.Decoration("Rail_Left", new Vector3(-sideX, railY, 0f), new Vector3(frame, 0.4f, l + 2f * t + 0.3f), _trimMaterial);
-            _blocks.Decoration("Rail_Right", new Vector3(sideX, railY, 0f), new Vector3(frame, 0.4f, l + 2f * t + 0.3f), _trimMaterial);
-            _blocks.Decoration("Rail_BlueEnd", new Vector3(0f, railY, -endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), _trimMaterial);
-            _blocks.Decoration("Rail_OrangeEnd", new Vector3(0f, railY, endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), _trimMaterial);
+            // Each side rail is split in a blue half and an orange half.
+            float halfRail = (l + 2f * t + 0.3f) * 0.5f;
+            foreach (float x in new[] { -sideX, sideX })
+            {
+                _blocks.Decoration("Rail_Side", new Vector3(x, railY, -halfRail * 0.5f), new Vector3(frame, 0.4f, halfRail), RailMaterial(-1f));
+                _blocks.Decoration("Rail_Side", new Vector3(x, railY, halfRail * 0.5f), new Vector3(frame, 0.4f, halfRail), RailMaterial(1f));
+            }
+            _blocks.Decoration("Rail_BlueEnd", new Vector3(0f, railY, -endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), RailMaterial(-1f));
+            _blocks.Decoration("Rail_OrangeEnd", new Vector3(0f, railY, endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), RailMaterial(1f));
 
             int panels = Mathf.CeilToInt(l / MaxPanelLength);
             for (int i = 0; i <= panels; i++)
@@ -230,38 +246,119 @@ namespace RockyLeague.Arena
             }
         }
 
-        /// <summary>Halfway line, centre circle and the area in front of each goal.</summary>
-        private void BuildFieldLines()
+        /// <summary>
+        /// Cuts each corner at 45 degrees with a diagonal glass wall, so the ball never gets
+        /// stuck in a right-angled corner. The square walls behind it stay, out of reach.
+        /// </summary>
+        private void BuildCorners()
         {
-            float y = LineThickness * 0.5f + 0.005f;
-            _blocks.Decoration("Line_Halfway", new Vector3(0f, y, 0f), new Vector3(_settings.Width, LineThickness, LineWidth), _lineMaterial);
-
-            float segmentLength = 2f * Mathf.PI * CenterCircleRadius / CenterCircleSegments + 0.05f;
-            for (int i = 0; i < CenterCircleSegments; i++)
+            float c = _settings.CornerSize;
+            if (c <= 0f)
             {
-                float angle = i * 360f / CenterCircleSegments;
-                float radians = angle * Mathf.Deg2Rad;
-                Vector3 point = new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * CenterCircleRadius;
-                // Each piece lies along the tangent of the circle at its point.
-                Quaternion along = Quaternion.Euler(0f, -(angle + 90f), 0f);
-                _blocks.Decoration(PrimitiveType.Cube, "Line_Circle", point + Vector3.up * y, new Vector3(segmentLength, LineThickness, LineWidth), along, _lineMaterial);
+                return;
             }
 
-            BuildGoalArea(Team.Blue, y);
-            BuildGoalArea(Team.Orange, y);
+            float h = _settings.WallHeight;
+            float t = _settings.WallThickness;
+            foreach (Vector3 corner in Corners())
+            {
+                CornerLine(corner, out Vector3 start, out Vector3 end, out Vector3 inward);
+                Vector3 middle = (start + end) * 0.5f - inward * (t * 0.5f);
+                float length = (end - start).magnitude + t;
+                // Facing outwards: the box's long side runs along the diagonal.
+                Quaternion facing = Quaternion.LookRotation(-inward, Vector3.up);
+
+                _blocks.Solid("Corner_Wall", middle + Vector3.up * (h * 0.5f), new Vector3(length, h, t), facing, _wallMaterial, _wallPhysics);
+                _blocks.Decoration(PrimitiveType.Cube, "Corner_Rail", middle + Vector3.up * (h + 0.2f), new Vector3(length, 0.4f, t + 0.3f), facing, RailMaterial(corner.z));
+            }
         }
 
-        private void BuildGoalArea(Team team, float y)
+        /// <summary>Quarter pipes along every wall: the sides, both halves of each end and the corners.</summary>
+        private void BuildRamps()
         {
-            float side = GoalSide(team);
-            float halfWidth = _settings.GoalWidth * 0.5f + GoalAreaMargin;
-            float goalLineZ = side * _settings.Length * 0.5f;
-            float frontZ = goalLineZ - side * GoalAreaDepth;
-            float middleZ = (goalLineZ + frontZ) * 0.5f;
+            float r = _settings.RampRadius;
+            if (r <= 0f)
+            {
+                return;
+            }
 
-            _blocks.Decoration($"Line_{team}Area_Front", new Vector3(0f, y, frontZ), new Vector3(2f * halfWidth, LineThickness, LineWidth), _lineMaterial);
-            _blocks.Decoration($"Line_{team}Area_Left", new Vector3(-halfWidth, y, middleZ), new Vector3(LineWidth, LineThickness, GoalAreaDepth), _lineMaterial);
-            _blocks.Decoration($"Line_{team}Area_Right", new Vector3(halfWidth, y, middleZ), new Vector3(LineWidth, LineThickness, GoalAreaDepth), _lineMaterial);
+            Material material = _rampMaterial != null ? _rampMaterial : _floorMaterial;
+            RampBuilder ramps = new RampBuilder(_blocks, material, _wallPhysics, r, RampSlats, RampThickness);
+
+            float halfWidth = _settings.Width * 0.5f;
+            float halfLength = _settings.Length * 0.5f;
+            float c = _settings.CornerSize;
+            float goalGap = _settings.GoalWidth * 0.5f + 0.5f;
+
+            ramps.Build("Ramp_Left", new Vector3(-halfWidth, 0f, -(halfLength - c)), new Vector3(-halfWidth, 0f, halfLength - c), Vector3.right);
+            ramps.Build("Ramp_Right", new Vector3(halfWidth, 0f, -(halfLength - c)), new Vector3(halfWidth, 0f, halfLength - c), Vector3.left);
+
+            foreach (float side in new[] { -1f, 1f })
+            {
+                Vector3 inward = new Vector3(0f, 0f, -side);
+                float z = side * halfLength;
+                // Left and right of the goal mouth: the opening itself stays flat.
+                ramps.Build("Ramp_End", new Vector3(-(halfWidth - c), 0f, z), new Vector3(-goalGap, 0f, z), inward);
+                ramps.Build("Ramp_End", new Vector3(goalGap, 0f, z), new Vector3(halfWidth - c, 0f, z), inward);
+            }
+
+            if (c <= 0f)
+            {
+                return;
+            }
+
+            foreach (Vector3 corner in Corners())
+            {
+                CornerLine(corner, out Vector3 start, out Vector3 end, out Vector3 inward);
+                ramps.Build("Ramp_Corner", start, end, inward);
+            }
+        }
+
+        /// <summary>Two posts and a crossbar that glow in the colour of the team that defends the goal.</summary>
+        private void BuildGoalFrame(Team team)
+        {
+            Material glow = team == Team.Blue ? _blueGlowMaterial : _orangeGlowMaterial;
+            if (glow == null)
+            {
+                return;
+            }
+
+            float gh = _settings.GoalHeight;
+            float halfGoal = _settings.GoalWidth * 0.5f;
+            float z = GoalSide(team) * _settings.Length * 0.5f;
+            Vector3 thickness = new Vector3(2f * GoalFrameRadius, 0f, 2f * GoalFrameRadius);
+
+            // A cylinder is 2 units tall at scale 1, so its height scale is half the length.
+            _blocks.Decoration(PrimitiveType.Cylinder, $"{team}Goal_PostLeft", new Vector3(-halfGoal, gh * 0.5f, z),
+                thickness + Vector3.up * (gh * 0.5f), Quaternion.identity, glow);
+            _blocks.Decoration(PrimitiveType.Cylinder, $"{team}Goal_PostRight", new Vector3(halfGoal, gh * 0.5f, z),
+                thickness + Vector3.up * (gh * 0.5f), Quaternion.identity, glow);
+            _blocks.Decoration(PrimitiveType.Cylinder, $"{team}Goal_Crossbar", new Vector3(0f, gh, z),
+                thickness + Vector3.up * (halfGoal + GoalFrameRadius), Quaternion.Euler(0f, 0f, 90f), glow);
+        }
+
+        /// <summary>The four corners as (x sign, 0, z sign).</summary>
+        private static Vector3[] Corners()
+        {
+            return new[] { new Vector3(-1f, 0f, -1f), new Vector3(1f, 0f, -1f), new Vector3(-1f, 0f, 1f), new Vector3(1f, 0f, 1f) };
+        }
+
+        /// <summary>Where the diagonal wall of a corner meets the floor, and which way the field is.</summary>
+        private void CornerLine(Vector3 corner, out Vector3 start, out Vector3 end, out Vector3 inward)
+        {
+            float halfWidth = _settings.Width * 0.5f;
+            float halfLength = _settings.Length * 0.5f;
+            float c = _settings.CornerSize;
+            start = new Vector3(corner.x * (halfWidth - c), 0f, corner.z * halfLength);
+            end = new Vector3(corner.x * halfWidth, 0f, corner.z * (halfLength - c));
+            inward = new Vector3(-corner.x, 0f, -corner.z).normalized;
+        }
+
+        /// <summary>Rails glow blue on the blue half (negative Z) and orange on the other half.</summary>
+        private Material RailMaterial(float z)
+        {
+            Material glow = z < 0f ? _blueGlowMaterial : _orangeGlowMaterial;
+            return glow != null ? glow : _trimMaterial;
         }
 
         // Editor preview: the field outline and both goals, visible without pressing Play.
