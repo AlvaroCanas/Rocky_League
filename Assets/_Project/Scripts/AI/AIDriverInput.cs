@@ -1,3 +1,4 @@
+using System;
 using RockyLeague.AI.States;
 using RockyLeague.Arena;
 using RockyLeague.Car;
@@ -22,7 +23,7 @@ namespace RockyLeague.AI
     [RequireComponent(typeof(CarController))]
     public sealed class AIDriverInput : MonoBehaviour, ICarInput
     {
-        [SerializeField] private Team _team = Team.Orange;
+        [SerializeField] private Team _team = Team.Away;
         [SerializeField] private AIDifficulty _difficulty;
         [SerializeField] private Ball _ball;
         [SerializeField] private ArenaBuilder _arena;
@@ -38,6 +39,7 @@ namespace RockyLeague.AI
         private AIRepositionState _reposition;
         private IState _desiredState;
         private float _nextDecisionTime;
+        private Func<bool> _canDrive = () => true;
 
         /// <summary>Name of the current behaviour, for debugging.</summary>
         public string CurrentBehaviour => _brain?.CurrentState?.GetType().Name ?? "None";
@@ -46,12 +48,18 @@ namespace RockyLeague.AI
         /// Sets the bot up from code (for a factory that spawns cars).
         /// Must be called before the first Start.
         /// </summary>
-        public void Initialize(Team team, AIDifficulty difficulty, Ball ball, ArenaBuilder arena)
+        /// <param name="canDrive">
+        /// Tells the bot whether its car is allowed to move (false during a kickoff countdown and
+        /// after the final whistle). Meanwhile the bot does not think at all, so it never mistakes
+        /// "not allowed to move" for "stuck". Null means it can always drive.
+        /// </param>
+        public void Initialize(Team team, AIDifficulty difficulty, Ball ball, ArenaBuilder arena, Func<bool> canDrive = null)
         {
             _team = team;
             _difficulty = difficulty;
             _ball = ball;
             _arena = arena;
+            _canDrive = canDrive ?? (() => true);
         }
 
         public CarInputData ReadInput()
@@ -83,6 +91,16 @@ namespace RockyLeague.AI
         {
             if (_context == null)
             {
+                return;
+            }
+
+            // While the car may not move (countdown, end of the match) the bot does nothing at
+            // all, and decides again as soon as it can drive.
+            if (!_canDrive())
+            {
+                _stuckRecovery.Reset();
+                _context.Command = CarInputData.None;
+                _nextDecisionTime = 0f;
                 return;
             }
 

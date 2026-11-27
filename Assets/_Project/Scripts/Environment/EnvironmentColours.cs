@@ -1,6 +1,7 @@
 using System;
 using RockyLeague.Arena;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace RockyLeague.Environment
 {
@@ -12,8 +13,8 @@ namespace RockyLeague.Environment
         [SerializeField] private Color _concrete = new Color(0.62f, 0.63f, 0.66f);
         [SerializeField] private Color _road = new Color(0.22f, 0.23f, 0.25f);
         [SerializeField] private Color _roof = new Color(0.85f, 0.87f, 0.9f);
-        [SerializeField] private Color _blueSeats = new Color(0.16f, 0.36f, 0.85f);
-        [SerializeField] private Color _orangeSeats = new Color(0.95f, 0.5f, 0.1f);
+        [SerializeField, FormerlySerializedAs("_blueSeats")] private Color _homeSeats = new Color(0.16f, 0.36f, 0.85f);
+        [SerializeField, FormerlySerializedAs("_orangeSeats")] private Color _awaySeats = new Color(0.95f, 0.5f, 0.1f);
         [SerializeField] private Color _tower = new Color(0.2f, 0.22f, 0.26f);
         [SerializeField] private Color _screenFrame = new Color(0.08f, 0.09f, 0.11f);
         [SerializeField] private Color _trunk = new Color(0.4f, 0.27f, 0.16f);
@@ -49,7 +50,7 @@ namespace RockyLeague.Environment
 
         public Color SeatColour(Team team)
         {
-            return team == Team.Blue ? _blueSeats : _orangeSeats;
+            return team == Team.Home ? _homeSeats : _awaySeats;
         }
     }
 }

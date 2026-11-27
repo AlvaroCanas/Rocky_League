@@ -73,13 +73,13 @@ namespace RockyLeague.Arena
                 _blocks.Decoration(PrimitiveType.Cube, "Line_Circle", point + Vector3.up * y, new Vector3(segmentLength, LineThickness, LineWidth), along, _lineMaterial);
             }
 
-            BuildGoalArea(Team.Blue, y);
-            BuildGoalArea(Team.Orange, y);
+            BuildGoalArea(Team.Home, y);
+            BuildGoalArea(Team.Away, y);
         }
 
         private void BuildGoalArea(Team team, float y)
         {
-            float side = team == Team.Blue ? -1f : 1f;
+            float side = team == Team.Home ? -1f : 1f;
             float halfWidth = _settings.GoalWidth * 0.5f + GoalAreaMargin;
             float goalLineZ = side * _settings.Length * 0.5f;
             float frontZ = goalLineZ - side * GoalAreaDepth;

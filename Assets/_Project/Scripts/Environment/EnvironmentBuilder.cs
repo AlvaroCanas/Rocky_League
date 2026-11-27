@@ -23,6 +23,8 @@ namespace RockyLeague.Environment
         [SerializeField] private ArenaBuilder _arena;
         [SerializeField, Tooltip("Optional: the giant screens show its score.")]
         private ScoreKeeper _scoreKeeper;
+        [SerializeField, Tooltip("Optional: the referee whose valid goals make the crowd cheer, the screens flash and the fire jets burn.")]
+        private MatchController _match;
 
         [Header("Materials")]
         [SerializeField, Tooltip("Opaque lit material; most of the scenery uses tinted copies of it.")]
@@ -66,21 +68,24 @@ namespace RockyLeague.Environment
             StadiumLayout layout = new StadiumLayout(_arena.Settings, _standTiers, TierDepth, TierRise);
             _palette = new Palette(_baseMaterial);
 
+            // Explicit Unity null check: an unassigned field must reach the effects as a real null.
+            IGoalSource goals = _match != null ? _match : null;
+
             CrowdCheer crowd = crowdRoot.gameObject.AddComponent<CrowdCheer>();
-            crowd.Initialize(_arena);
+            crowd.Initialize(goals);
 
             StandsBuilder stands = new StandsBuilder(sceneryBlocks, new BlockBuilder(crowdRoot), crowd, _palette, layout, _colours, random, _crowdDensity);
             stands.Build();
 
             StadiumDecorBuilder decor = new StadiumDecorBuilder(sceneryBlocks, dynamic, _palette, layout, _colours, _lampMaterial);
             decor.BuildFloodlights();
-            decor.BuildScreens(_scoreKeeper, _arena);
+            decor.BuildScreens(_scoreKeeper, goals);
             decor.BuildAdBoards();
 
             if (_fireMaterial != null)
             {
                 FireEffects fire = dynamic.gameObject.AddComponent<FireEffects>();
-                fire.Initialize(_arena, _fireMaterial, layout, _palette.Paint(_colours.Tower));
+                fire.Initialize(goals, _fireMaterial, layout, _palette.Paint(_colours.Tower));
             }
 
             LandscapeBuilder landscape = new LandscapeBuilder(sceneryBlocks, dynamic, _palette, layout, _colours, random, _lampMaterial, _waterMaterial);

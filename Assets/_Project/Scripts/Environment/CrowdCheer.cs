@@ -6,7 +6,8 @@ namespace RockyLeague.Environment
 {
     /// <summary>
     /// Makes the crowd jump when a goal is scored. It is one more subscriber of the
-    /// goals' GoalScored event (Observer): the goals do not know the crowd exists.
+    /// referee's GoalScored event (Observer): only goals that count make the crowd jump,
+    /// and the referee does not know the crowd exists.
     /// Fans of the scoring team jump high; the others barely move.
     ///
     /// The fans are not animated one by one with their own scripts: this single component
@@ -22,15 +23,13 @@ namespace RockyLeague.Environment
         private float _rivalShare = 0.15f;
 
         private readonly List<Fan> _fans = new List<Fan>();
-        private ArenaBuilder _arena;
-        private Goal _blueGoal;
-        private Goal _orangeGoal;
+        private IGoalSource _goals;
         private Team _cheeringTeam;
         private float _cheerTimeLeft;
 
-        public void Initialize(ArenaBuilder arena)
+        public void Initialize(IGoalSource goals)
         {
-            _arena = arena;
+            _goals = goals;
         }
 
         public void AddFan(Transform fan, Team team, float phase)
@@ -38,30 +37,22 @@ namespace RockyLeague.Environment
             _fans.Add(new Fan(fan, team, phase));
         }
 
-        // Start: the arena creates its goals in its own Awake.
         private void Start()
         {
-            if (_arena == null)
+            if (_goals == null)
             {
                 enabled = false;
                 return;
             }
 
-            _blueGoal = _arena.GetGoal(Team.Blue);
-            _orangeGoal = _arena.GetGoal(Team.Orange);
-            _blueGoal.GoalScored += OnGoalScored;
-            _orangeGoal.GoalScored += OnGoalScored;
+            _goals.GoalScored += OnGoalScored;
         }
 
         private void OnDestroy()
         {
-            if (_blueGoal != null)
+            if (_goals != null)
             {
-                _blueGoal.GoalScored -= OnGoalScored;
-            }
-            if (_orangeGoal != null)
-            {
-                _orangeGoal.GoalScored -= OnGoalScored;
+                _goals.GoalScored -= OnGoalScored;
             }
         }
 

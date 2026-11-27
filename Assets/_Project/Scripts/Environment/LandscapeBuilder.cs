@@ -207,8 +207,8 @@ namespace RockyLeague.Environment
             // Capsules stand upright: turn the body so it lies along the direction of travel (Z).
             Quaternion lying = Quaternion.Euler(90f, 0f, 0f);
             parts.Decoration(PrimitiveType.Capsule, "Body", Vector3.zero, new Vector3(9f, 15f, 9f), lying, _palette.Paint(_colours.Blimp));
-            parts.Decoration(PrimitiveType.Cylinder, "Stripe_Blue", new Vector3(0f, 0f, 4f), new Vector3(9.2f, 1.2f, 9.2f), lying, _palette.Paint(_colours.SeatColour(Team.Blue)));
-            parts.Decoration(PrimitiveType.Cylinder, "Stripe_Orange", new Vector3(0f, 0f, -4f), new Vector3(9.2f, 1.2f, 9.2f), lying, _palette.Paint(_colours.SeatColour(Team.Orange)));
+            parts.Decoration(PrimitiveType.Cylinder, "Stripe_Home", new Vector3(0f, 0f, 4f), new Vector3(9.2f, 1.2f, 9.2f), lying, _palette.Paint(_colours.SeatColour(Team.Home)));
+            parts.Decoration(PrimitiveType.Cylinder, "Stripe_Away", new Vector3(0f, 0f, -4f), new Vector3(9.2f, 1.2f, 9.2f), lying, _palette.Paint(_colours.SeatColour(Team.Away)));
             parts.Decoration("Fin_Vertical", new Vector3(0f, 3.5f, -12f), new Vector3(0.4f, 6f, 5f), _palette.Paint(_colours.Tower));
             parts.Decoration("Fin_Horizontal", new Vector3(0f, 0f, -12f), new Vector3(11f, 0.4f, 5f), _palette.Paint(_colours.Tower));
             parts.Decoration("Gondola", new Vector3(0f, -5f, 1f), new Vector3(2.5f, 1.8f, 6f), _palette.Paint(_colours.Tower));
@@ -216,7 +216,7 @@ namespace RockyLeague.Environment
             foreach (float side in new[] { -1f, 1f })
             {
                 TextMeshPro text = WorldText.Create(blimpObject.transform, "Blimp_Text", new Vector3(side * 4.7f, 0.5f, 0f),
-                    new Vector3(side, 0f, 0f), new Vector2(20f, 4f), "ROCKY LEAGUE", 30f, _colours.SeatColour(Team.Blue));
+                    new Vector3(side, 0f, 0f), new Vector2(20f, 4f), "ROCKY LEAGUE", 30f, _colours.SeatColour(Team.Home));
                 text.alpha = 1f;
             }
 

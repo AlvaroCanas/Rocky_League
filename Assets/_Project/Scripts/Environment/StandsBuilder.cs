@@ -42,13 +42,13 @@ namespace RockyLeague.Environment
         {
             BuildStand("Stand_Left", Vector3.left, _layout.SideStandStart, _layout.SideStandLength, isSideStand: true);
             BuildStand("Stand_Right", Vector3.right, _layout.SideStandStart, _layout.SideStandLength, isSideStand: true);
-            BuildStand("Stand_BlueEnd", Vector3.back, _layout.EndStandStart, _layout.EndStandLength, isSideStand: false);
-            BuildStand("Stand_OrangeEnd", Vector3.forward, _layout.EndStandStart, _layout.EndStandLength, isSideStand: false);
+            BuildStand("Stand_HomeEnd", Vector3.back, _layout.EndStandStart, _layout.EndStandLength, isSideStand: false);
+            BuildStand("Stand_AwayEnd", Vector3.forward, _layout.EndStandStart, _layout.EndStandLength, isSideStand: false);
         }
 
         /// <param name="outward">Direction from the field to this stand.</param>
         /// <param name="start">Distance from the centre of the field to the first step.</param>
-        /// <param name="isSideStand">Side stands are split in a blue half and an orange half, and get a roof.</param>
+        /// <param name="isSideStand">Side stands are split in a home half and an away half, and get a roof.</param>
         private void BuildStand(string standName, Vector3 outward, float start, float length, bool isSideStand)
         {
             Vector3 along = Vector3.Cross(Vector3.up, outward);
@@ -161,12 +161,12 @@ namespace RockyLeague.Environment
 
         private static Team TeamAt(Vector3 point)
         {
-            return point.z < 0f ? Team.Blue : Team.Orange;
+            return point.z < 0f ? Team.Home : Team.Away;
         }
 
         private static Team TeamOfEnd(Vector3 outward)
         {
-            return outward.z < 0f ? Team.Blue : Team.Orange;
+            return outward.z < 0f ? Team.Home : Team.Away;
         }
 
         /// <summary>Rounds a colour to a few steps so similar shirts share one material.</summary>

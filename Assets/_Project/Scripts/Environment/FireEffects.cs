@@ -7,8 +7,8 @@ namespace RockyLeague.Environment
     /// <summary>
     /// Fire on top of the end stands: braziers that always burn and flame jets that fire
     /// for a few seconds when a goal is scored, on the stand of the team that scored.
-    /// Like the crowd and the screens, it is a subscriber of the goals' GoalScored event
-    /// (Observer): the goals do not know it exists.
+    /// Like the crowd and the screens, it is a subscriber of the referee's GoalScored event
+    /// (Observer): only goals that count fire the jets, and the referee does not know it exists.
     ///
     /// The flames are particle systems set up by code. The soft round shape of each
     /// particle is a small texture drawn by code too, so no image file is needed.
@@ -19,20 +19,18 @@ namespace RockyLeague.Environment
         private const float JetRate = 120f;
         private const int SpriteSize = 64;
 
-        private readonly List<ParticleSystem> _blueJets = new List<ParticleSystem>();
-        private readonly List<ParticleSystem> _orangeJets = new List<ParticleSystem>();
-        private ArenaBuilder _arena;
-        private Goal _blueGoal;
-        private Goal _orangeGoal;
+        private readonly List<ParticleSystem> _homeJets = new List<ParticleSystem>();
+        private readonly List<ParticleSystem> _awayJets = new List<ParticleSystem>();
+        private IGoalSource _goals;
         private Material _material;
         private Texture2D _sprite;
         private Team _firingTeam;
         private float _jetTimeLeft;
 
         /// <param name="fireMaterial">Transparent particle material; a copy gets the round sprite.</param>
-        public void Initialize(ArenaBuilder arena, Material fireMaterial, StadiumLayout layout, Material bowlMaterial)
+        public void Initialize(IGoalSource goals, Material fireMaterial, StadiumLayout layout, Material bowlMaterial)
         {
-            _arena = arena;
+            _goals = goals;
             _sprite = CreateSoftDot(SpriteSize);
             _material = new Material(fireMaterial);
             _material.SetTexture("_BaseMap", _sprite);
@@ -40,10 +38,10 @@ namespace RockyLeague.Environment
             float wallTop = layout.BackWallHeight;
             float halfBackWall = layout.EndStandLength * 0.5f + layout.StandDepth;
 
-            foreach (Team team in new[] { Team.Blue, Team.Orange })
+            foreach (Team team in new[] { Team.Home, Team.Away })
             {
-                float z = (team == Team.Blue ? -1f : 1f) * (layout.EndStandStart + layout.StandDepth + 0.5f);
-                List<ParticleSystem> jets = team == Team.Blue ? _blueJets : _orangeJets;
+                float z = (team == Team.Home ? -1f : 1f) * (layout.EndStandStart + layout.StandDepth + 0.5f);
+                List<ParticleSystem> jets = team == Team.Home ? _homeJets : _awayJets;
 
                 // Braziers at both ends of the wall and beside the screen.
                 foreach (float x in new[] { -(halfBackWall - 2f), -16f, 16f, halfBackWall - 2f })
@@ -68,30 +66,22 @@ namespace RockyLeague.Environment
             }
         }
 
-        // Start: the arena creates its goals in its own Awake.
         private void Start()
         {
-            if (_arena == null)
+            if (_goals == null)
             {
                 enabled = false;
                 return;
             }
 
-            _blueGoal = _arena.GetGoal(Team.Blue);
-            _orangeGoal = _arena.GetGoal(Team.Orange);
-            _blueGoal.GoalScored += OnGoalScored;
-            _orangeGoal.GoalScored += OnGoalScored;
+            _goals.GoalScored += OnGoalScored;
         }
 
         private void OnDestroy()
         {
-            if (_blueGoal != null)
+            if (_goals != null)
             {
-                _blueGoal.GoalScored -= OnGoalScored;
-            }
-            if (_orangeGoal != null)
-            {
-                _orangeGoal.GoalScored -= OnGoalScored;
+                _goals.GoalScored -= OnGoalScored;
             }
 
             // Made by code, so not freed with the scene.
@@ -122,7 +112,7 @@ namespace RockyLeague.Environment
 
         private void SetJetRate(Team team, float rate)
         {
-            foreach (ParticleSystem jet in team == Team.Blue ? _blueJets : _orangeJets)
+            foreach (ParticleSystem jet in team == Team.Home ? _homeJets : _awayJets)
             {
                 ParticleSystem.EmissionModule emission = jet.emission;
                 emission.rateOverTime = rate;

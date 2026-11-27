@@ -1,5 +1,6 @@
 using RockyLeague.Core.Building;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace RockyLeague.Arena
 {
@@ -24,8 +25,8 @@ namespace RockyLeague.Arena
         [Header("Looks (optional)")]
         [SerializeField] private Material _floorMaterial;
         [SerializeField] private Material _wallMaterial;
-        [SerializeField] private Material _blueGoalMaterial;
-        [SerializeField] private Material _orangeGoalMaterial;
+        [SerializeField, FormerlySerializedAs("_blueGoalMaterial")] private Material _homeGoalMaterial;
+        [SerializeField, FormerlySerializedAs("_orangeGoalMaterial")] private Material _awayGoalMaterial;
         [SerializeField, Tooltip("Frames along the edges of the glass walls.")]
         private Material _trimMaterial;
         [SerializeField, Tooltip("Lines painted on the field.")]
@@ -34,10 +35,10 @@ namespace RockyLeague.Arena
         private Material _stripeMaterial;
         [SerializeField, Tooltip("Curved ramps at the foot of the walls.")]
         private Material _rampMaterial;
-        [SerializeField, Tooltip("Glowing blue: goal frame and rails on the blue half.")]
-        private Material _blueGlowMaterial;
-        [SerializeField, Tooltip("Glowing orange: goal frame and rails on the orange half.")]
-        private Material _orangeGlowMaterial;
+        [SerializeField, Tooltip("Glow of the home side: goal frame and rails on the home half."), FormerlySerializedAs("_blueGlowMaterial")]
+        private Material _homeGlowMaterial;
+        [SerializeField, Tooltip("Glow of the away side: goal frame and rails on the away half."), FormerlySerializedAs("_orangeGlowMaterial")]
+        private Material _awayGlowMaterial;
         [SerializeField, Tooltip("Show the ceiling (useful for debugging only).")]
         private bool _showCeiling;
 
@@ -49,15 +50,15 @@ namespace RockyLeague.Arena
 
         private PhysicsMaterial _wallPhysics;
         private BlockBuilder _blocks;
-        private Goal _blueGoal;
-        private Goal _orangeGoal;
+        private Goal _homeGoal;
+        private Goal _awayGoal;
 
         public ArenaSettings Settings => _settings;
 
         /// <summary>The goal that <paramref name="team"/> defends. Available after Awake.</summary>
         public Goal GetGoal(Team team)
         {
-            return team == Team.Blue ? _blueGoal : _orangeGoal;
+            return team == Team.Home ? _homeGoal : _awayGoal;
         }
 
         /// <summary>Centre of the opening of the goal that <paramref name="team"/> defends.</summary>
@@ -67,18 +68,23 @@ namespace RockyLeague.Arena
             return transform.TransformPoint(new Vector3(0f, _settings.GoalHeight * 0.5f, z));
         }
 
-        /// <summary>Where a car of <paramref name="team"/> starts each kickoff, half way to its own goal.</summary>
-        public Vector3 GetKickoffPosition(Team team)
-        {
-            float z = GoalSide(team) * _settings.Length * 0.25f;
-            return transform.TransformPoint(new Vector3(0f, 0.5f, z));
-        }
+        /// <summary>How many different kickoff spots each team has.</summary>
+        public int KickoffSpotCount => _settings.KickoffSpots.Count;
 
-        /// <summary>Rotation that makes a car of <paramref name="team"/> face the opponent's goal.</summary>
-        public Quaternion GetKickoffRotation(Team team)
+        /// <summary>
+        /// Where a car of <paramref name="team"/> starts a kickoff from spot number
+        /// <paramref name="spotIndex"/>, facing the centre of the field (where the ball waits).
+        /// Both teams get the same spot turned 180 degrees, so a kickoff is always fair.
+        /// </summary>
+        public Pose GetKickoffPose(Team team, int spotIndex)
         {
-            Vector3 towardsRival = new Vector3(0f, 0f, -GoalSide(team));
-            return transform.rotation * Quaternion.LookRotation(towardsRival, Vector3.up);
+            Vector3 local = KickoffLocalPosition(team, _settings.KickoffSpots[spotIndex]);
+
+            // Look at the centre spot; a spot right on the centre line looks at the rival goal instead.
+            Vector3 towardsCentre = new Vector3(-local.x, 0f, -local.z);
+            Vector3 heading = towardsCentre.sqrMagnitude > 0.01f ? towardsCentre : new Vector3(0f, 0f, -GoalSide(team));
+
+            return new Pose(transform.TransformPoint(local), transform.rotation * Quaternion.LookRotation(heading, Vector3.up));
         }
 
         private void Awake()
@@ -95,10 +101,21 @@ namespace RockyLeague.Arena
             Build();
         }
 
-        // -1 for the Blue goal (negative Z), +1 for the Orange goal (positive Z).
+        // -1 for the Home goal (negative Z), +1 for the Away goal (positive Z).
         private static float GoalSide(Team team)
         {
-            return team == Team.Blue ? -1f : 1f;
+            return team == Team.Home ? -1f : 1f;
+        }
+
+        // Spots are written from the Home side; turning them 180 degrees (flipping X and Z)
+        // gives the Away side, so the "left diagonal" is on each driver's left.
+        private Vector3 KickoffLocalPosition(Team team, Vector2 spot)
+        {
+            const float spawnHeight = 0.5f;
+            float side = GoalSide(team);
+            float x = -side * spot.x * _settings.Width * 0.5f;
+            float z = side * spot.y * _settings.Length * 0.5f;
+            return new Vector3(x, spawnHeight, z);
         }
 
         private PhysicsMaterial CreateWallPhysics()
@@ -132,19 +149,19 @@ namespace RockyLeague.Arena
             _blocks.Solid("Wall_Left", new Vector3(-sideX, h * 0.5f, 0f), sideSize, _wallMaterial, _wallPhysics);
             _blocks.Solid("Wall_Right", new Vector3(sideX, h * 0.5f, 0f), sideSize, _wallMaterial, _wallPhysics);
 
-            BuildEnd(Team.Blue, _blueGoalMaterial);
-            BuildEnd(Team.Orange, _orangeGoalMaterial);
+            BuildEnd(Team.Home, _homeGoalMaterial);
+            BuildEnd(Team.Away, _awayGoalMaterial);
             BuildCorners();
             BuildRamps();
-            BuildGoalFrame(Team.Blue);
-            BuildGoalFrame(Team.Orange);
+            BuildGoalFrame(Team.Home);
+            BuildGoalFrame(Team.Away);
             BuildFrames();
 
             FieldMarkingsBuilder markings = new FieldMarkingsBuilder(_blocks, _settings, _lineMaterial, _stripeMaterial);
             markings.Build();
 
-            _blueGoal = CreateGoalTrigger(Team.Blue);
-            _orangeGoal = CreateGoalTrigger(Team.Orange);
+            _homeGoal = CreateGoalTrigger(Team.Home);
+            _awayGoal = CreateGoalTrigger(Team.Away);
         }
 
         /// <summary>Invisible volume inside the goal box, from the goal line margin to the back of the net.</summary>
@@ -220,15 +237,15 @@ namespace RockyLeague.Arena
             float sideX = w * 0.5f + t * 0.5f;
             float endZ = l * 0.5f + t * 0.5f;
 
-            // Each side rail is split in a blue half and an orange half.
+            // Each side rail is split in a home half and an away half.
             float halfRail = (l + 2f * t + 0.3f) * 0.5f;
             foreach (float x in new[] { -sideX, sideX })
             {
                 _blocks.Decoration("Rail_Side", new Vector3(x, railY, -halfRail * 0.5f), new Vector3(frame, 0.4f, halfRail), RailMaterial(-1f));
                 _blocks.Decoration("Rail_Side", new Vector3(x, railY, halfRail * 0.5f), new Vector3(frame, 0.4f, halfRail), RailMaterial(1f));
             }
-            _blocks.Decoration("Rail_BlueEnd", new Vector3(0f, railY, -endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), RailMaterial(-1f));
-            _blocks.Decoration("Rail_OrangeEnd", new Vector3(0f, railY, endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), RailMaterial(1f));
+            _blocks.Decoration("Rail_HomeEnd", new Vector3(0f, railY, -endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), RailMaterial(-1f));
+            _blocks.Decoration("Rail_AwayEnd", new Vector3(0f, railY, endZ), new Vector3(w + 2f * t + 0.3f, 0.4f, frame), RailMaterial(1f));
 
             int panels = Mathf.CeilToInt(l / MaxPanelLength);
             for (int i = 0; i <= panels; i++)
@@ -317,7 +334,7 @@ namespace RockyLeague.Arena
         /// <summary>Two posts and a crossbar that glow in the colour of the team that defends the goal.</summary>
         private void BuildGoalFrame(Team team)
         {
-            Material glow = team == Team.Blue ? _blueGlowMaterial : _orangeGlowMaterial;
+            Material glow = team == Team.Home ? _homeGlowMaterial : _awayGlowMaterial;
             if (glow == null)
             {
                 return;
@@ -354,10 +371,10 @@ namespace RockyLeague.Arena
             inward = new Vector3(-corner.x, 0f, -corner.z).normalized;
         }
 
-        /// <summary>Rails glow blue on the blue half (negative Z) and orange on the other half.</summary>
+        /// <summary>Rails glow with the home colour on the home half (negative Z) and with the away colour on the other half.</summary>
         private Material RailMaterial(float z)
         {
-            Material glow = z < 0f ? _blueGlowMaterial : _orangeGlowMaterial;
+            Material glow = z < 0f ? _homeGlowMaterial : _awayGlowMaterial;
             return glow != null ? glow : _trimMaterial;
         }
 
@@ -383,6 +400,14 @@ namespace RockyLeague.Arena
             Gizmos.DrawWireCube(new Vector3(0f, gh * 0.5f, -(l * 0.5f + boxDepth * 0.5f)), goalSize);
             Gizmos.color = new Color(1f, 0.5f, 0f);
             Gizmos.DrawWireCube(new Vector3(0f, gh * 0.5f, l * 0.5f + boxDepth * 0.5f), goalSize);
+
+            // Kickoff spots of both teams.
+            Gizmos.color = Color.yellow;
+            foreach (Vector2 spot in _settings.KickoffSpots)
+            {
+                Gizmos.DrawWireSphere(KickoffLocalPosition(Team.Home, spot), 1f);
+                Gizmos.DrawWireSphere(KickoffLocalPosition(Team.Away, spot), 1f);
+            }
         }
     }
 }

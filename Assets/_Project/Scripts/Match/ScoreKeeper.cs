@@ -5,87 +5,53 @@ using UnityEngine;
 namespace RockyLeague.Match
 {
     /// <summary>
-    /// Keeps the score of the match. It is a subscriber (Observer pattern):
-    /// it listens to both <see cref="Goal"/>s and, after counting a goal,
-    /// publishes <see cref="ScoreChanged"/> for whoever needs the score (UI, match flow).
+    /// Keeps the score of the match and publishes <see cref="ScoreChanged"/> (Observer) for
+    /// whoever needs it (scoreboard, stadium screens).
     ///
-    /// It only counts (SRP): deciding what happens after a goal (celebration,
-    /// kickoff, end of match) belongs to the match flow.
+    /// It does not listen to the goals itself: the referee (<see cref="MatchController"/>)
+    /// decides which goals count and calls <see cref="AddGoal"/>. So a ball that rolls into a
+    /// goal when the ball is not in play (after the final whistle...) never reaches the score:
+    /// there is a single place that decides what a valid goal is (SRP, no duplicated rules).
     /// </summary>
     public sealed class ScoreKeeper : MonoBehaviour
     {
-        [SerializeField] private ArenaBuilder _arena;
+        private int _homeGoals;
+        private int _awayGoals;
 
-        private Goal _blueGoal;
-        private Goal _orangeGoal;
-        private int _blueGoals;
-        private int _orangeGoals;
-
-        /// <summary>Raised after every change with (blue goals, orange goals).</summary>
+        /// <summary>Raised after every change with (home goals, away goals).</summary>
         public event Action<int, int> ScoreChanged;
 
         public int GetGoals(Team team)
         {
-            return team == Team.Blue ? _blueGoals : _orangeGoals;
+            return team == Team.Home ? _homeGoals : _awayGoals;
         }
 
-        public bool IsTied => _blueGoals == _orangeGoals;
+        public bool IsTied => _homeGoals == _awayGoals;
 
         /// <summary>Team with more goals. Only meaningful when not <see cref="IsTied"/>.</summary>
-        public Team Leader => _blueGoals > _orangeGoals ? Team.Blue : Team.Orange;
+        public Team Leader => _homeGoals > _awayGoals ? Team.Home : Team.Away;
+
+        /// <summary>Counts a valid goal for <paramref name="scoringTeam"/>.</summary>
+        public void AddGoal(Team scoringTeam)
+        {
+            if (scoringTeam == Team.Home)
+            {
+                _homeGoals++;
+            }
+            else
+            {
+                _awayGoals++;
+            }
+
+            ScoreChanged?.Invoke(_homeGoals, _awayGoals);
+        }
 
         /// <summary>Back to 0 - 0, for a new match.</summary>
         public void ResetScore()
         {
-            _blueGoals = 0;
-            _orangeGoals = 0;
-            ScoreChanged?.Invoke(_blueGoals, _orangeGoals);
-        }
-
-        // Start instead of Awake/OnEnable: the arena creates its goals in its own Awake,
-        // and Unity runs every Awake before any Start.
-        private void Start()
-        {
-            if (_arena == null)
-            {
-                Debug.LogError($"{nameof(ScoreKeeper)} on '{name}' has no {nameof(ArenaBuilder)} assigned.", this);
-                enabled = false;
-                return;
-            }
-
-            _blueGoal = _arena.GetGoal(Team.Blue);
-            _orangeGoal = _arena.GetGoal(Team.Orange);
-            _blueGoal.GoalScored += OnGoalScored;
-            _orangeGoal.GoalScored += OnGoalScored;
-
-            ScoreChanged?.Invoke(_blueGoals, _orangeGoals);
-        }
-
-        // Always unsubscribe: a forgotten subscription keeps references alive between matches.
-        private void OnDestroy()
-        {
-            if (_blueGoal != null)
-            {
-                _blueGoal.GoalScored -= OnGoalScored;
-            }
-            if (_orangeGoal != null)
-            {
-                _orangeGoal.GoalScored -= OnGoalScored;
-            }
-        }
-
-        private void OnGoalScored(object sender, GoalScoredEventArgs e)
-        {
-            if (e.ScoringTeam == Team.Blue)
-            {
-                _blueGoals++;
-            }
-            else
-            {
-                _orangeGoals++;
-            }
-
-            ScoreChanged?.Invoke(_blueGoals, _orangeGoals);
+            _homeGoals = 0;
+            _awayGoals = 0;
+            ScoreChanged?.Invoke(_homeGoals, _awayGoals);
         }
     }
 }

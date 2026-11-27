@@ -13,7 +13,7 @@ namespace RockyLeague.Arena
     /// counts when the whole ball has crossed the line (as in real football).
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
-    public sealed class Goal : MonoBehaviour
+    public sealed class Goal : MonoBehaviour, IGoalSource
     {
         [SerializeField] private Team _defendingTeam;
 

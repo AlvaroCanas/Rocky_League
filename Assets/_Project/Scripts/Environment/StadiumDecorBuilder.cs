@@ -58,7 +58,7 @@ namespace RockyLeague.Environment
         }
 
         /// <summary>A screen above each end stand, facing the field, that follows the score.</summary>
-        public void BuildScreens(ScoreKeeper scoreKeeper, ArenaBuilder arena)
+        public void BuildScreens(ScoreKeeper scoreKeeper, IGoalSource goals)
         {
             foreach (Vector3 outward in new[] { Vector3.back, Vector3.forward })
             {
@@ -76,7 +76,7 @@ namespace RockyLeague.Environment
                         new Vector3(0.8f, legHeight, 0.8f), _palette.Paint(_colours.Tower));
                 }
 
-                if (scoreKeeper == null || arena == null)
+                if (scoreKeeper == null || goals == null)
                 {
                     continue;
                 }
@@ -89,7 +89,7 @@ namespace RockyLeague.Environment
                 TextMeshPro score = WorldText.Create(_dynamicRoot, "Screen_Score", textSpot - Vector3.up * 1f, towardsField,
                     new Vector2(ScreenWidth - 2f, 6f), "0 - 0", 60f, Color.white);
                 StadiumScreen screen = score.gameObject.AddComponent<StadiumScreen>();
-                screen.Initialize(scoreKeeper, arena, score, _colours.SeatColour(Team.Blue), _colours.SeatColour(Team.Orange));
+                screen.Initialize(scoreKeeper, goals, score, _colours.SeatColour(Team.Home), _colours.SeatColour(Team.Away));
             }
         }
 
@@ -107,7 +107,7 @@ namespace RockyLeague.Environment
                 {
                     float z = -halfLength + (i + 0.5f) * BoardSpacing;
                     Vector3 centre = outward * x + new Vector3(0f, 0.7f, z);
-                    Team team = z < 0f ? Team.Blue : Team.Orange;
+                    Team team = z < 0f ? Team.Home : Team.Away;
 
                     _scenery.Decoration("AdBoard", centre, new Vector3(0.2f, 1.2f, BoardLength), _palette.Paint(_colours.SeatColour(team)));
                     WorldText.Create(_dynamicRoot, "AdBoard_Text", centre - outward * 0.12f, -outward,

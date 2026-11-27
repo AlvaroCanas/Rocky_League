@@ -8,7 +8,7 @@ namespace RockyLeague.Arena
     {
         public static Team Opponent(this Team team)
         {
-            return team == Team.Blue ? Team.Orange : Team.Blue;
+            return team == Team.Home ? Team.Away : Team.Home;
         }
     }
 }
