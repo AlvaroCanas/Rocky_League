@@ -11,6 +11,8 @@ namespace RockyLeague.Core.Game
     /// </summary>
     public sealed class SceneState : IState
     {
+        private bool _hasBeenEntered;
+
         public string SceneName { get; }
 
         public SceneState(string sceneName)
@@ -20,12 +22,17 @@ namespace RockyLeague.Core.Game
 
         public void Enter()
         {
-            // The scene that hosts the GameManager is already loaded on startup.
-            if (SceneManager.GetActiveScene().name == SceneName)
+            // The scene that hosts the GameManager is already loaded when the game starts, so the
+            // very first time it is not loaded again. From then on, entering always loads the
+            // scene, which is what lets a match be restarted by entering its state again.
+            bool alreadyOnScreen = SceneManager.GetActiveScene().name == SceneName;
+            if (!_hasBeenEntered && alreadyOnScreen)
             {
+                _hasBeenEntered = true;
                 return;
             }
 
+            _hasBeenEntered = true;
             SceneManager.LoadSceneAsync(SceneName);
         }
 

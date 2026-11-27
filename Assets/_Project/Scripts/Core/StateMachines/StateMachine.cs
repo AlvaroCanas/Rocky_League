@@ -61,6 +61,24 @@ namespace RockyLeague.Core.StateMachines
         }
 
         /// <summary>Evaluates transitions and then ticks the current state.</summary>
+        /// <summary>
+        /// Leaves and enters the current state again (Exit, then Enter), for example to restart
+        /// a match with the same rules. <see cref="ChangeState"/> deliberately ignores a change to
+        /// the state we are already in, so restarting has to be asked for explicitly.
+        /// </summary>
+        public void ReenterCurrentState()
+        {
+            if (CurrentState == null)
+            {
+                return;
+            }
+
+            CurrentState.Exit();
+            CurrentState.Enter();
+
+            StateChanged?.Invoke(CurrentState, CurrentState);
+        }
+
         public void Tick(float deltaTime)
         {
             IState next = FindTriggeredTransition();
