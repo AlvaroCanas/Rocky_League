@@ -47,6 +47,21 @@ namespace RockyLeague.Core.Game
             GoTo(_matchState);
         }
 
+        /// <summary>
+        /// Plays the current match again from scratch, with the same configuration. The Match
+        /// scene is loaded again, so nothing from the previous match survives (clean restart).
+        /// </summary>
+        public void RestartMatch()
+        {
+            if (_stateMachine.CurrentState != _matchState || CurrentMatchConfig == null)
+            {
+                Debug.LogWarning("There is no match to restart.", this);
+                return;
+            }
+
+            _stateMachine.ReenterCurrentState();
+        }
+
         public void StartTraining() => GoTo(_trainingState);
 
         private void Awake()

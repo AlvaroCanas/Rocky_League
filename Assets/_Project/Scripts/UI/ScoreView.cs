@@ -2,6 +2,7 @@ using RockyLeague.Arena;
 using RockyLeague.Match;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace RockyLeague.UI
 {
@@ -14,8 +15,8 @@ namespace RockyLeague.UI
     {
         [SerializeField] private ScoreKeeper _scoreKeeper;
         [SerializeField] private TMP_Text _text;
-        [SerializeField] private Color _blueColor = new Color(0.25f, 0.5f, 1f);
-        [SerializeField] private Color _orangeColor = new Color(1f, 0.55f, 0.1f);
+        [SerializeField, FormerlySerializedAs("_blueColor")] private Color _homeColor = new Color(0.25f, 0.5f, 1f);
+        [SerializeField, FormerlySerializedAs("_orangeColor")] private Color _awayColor = new Color(1f, 0.55f, 0.1f);
 
         private void OnEnable()
         {
@@ -27,7 +28,7 @@ namespace RockyLeague.UI
             }
 
             _scoreKeeper.ScoreChanged += OnScoreChanged;
-            OnScoreChanged(_scoreKeeper.GetGoals(Team.Blue), _scoreKeeper.GetGoals(Team.Orange));
+            OnScoreChanged(_scoreKeeper.GetGoals(Team.Home), _scoreKeeper.GetGoals(Team.Away));
         }
 
         private void OnDisable()
@@ -38,11 +39,11 @@ namespace RockyLeague.UI
             }
         }
 
-        private void OnScoreChanged(int blueGoals, int orangeGoals)
+        private void OnScoreChanged(int homeGoals, int awayGoals)
         {
-            string blue = ColorUtility.ToHtmlStringRGB(_blueColor);
-            string orange = ColorUtility.ToHtmlStringRGB(_orangeColor);
-            _text.text = $"<color=#{blue}>{blueGoals}</color>  -  <color=#{orange}>{orangeGoals}</color>";
+            string home = ColorUtility.ToHtmlStringRGB(_homeColor);
+            string away = ColorUtility.ToHtmlStringRGB(_awayColor);
+            _text.text = $"<color=#{home}>{homeGoals}</color>  -  <color=#{away}>{awayGoals}</color>";
         }
     }
 }

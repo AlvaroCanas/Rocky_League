@@ -69,7 +69,8 @@ namespace RockyLeague.UI
                     _messageText.text = BuildGoalText();
                     break;
                 case MatchPhase.MatchEnd:
-                    _messageText.text = BuildResultText();
+                    // The result itself is shown by the results panel: one place per piece of information.
+                    _messageText.text = "FULL TIME!";
                     break;
             }
         }
@@ -107,12 +108,6 @@ namespace RockyLeague.UI
         {
             Team? scorer = _match.LastScorer;
             return scorer.HasValue ? $"GOAL!\n<size=40%>{scorer.Value.ToString().ToUpperInvariant()}</size>" : "GOAL!";
-        }
-
-        private string BuildResultText()
-        {
-            Team? winner = _match.Winner;
-            return winner.HasValue ? $"{winner.Value.ToString().ToUpperInvariant()} WINS" : "DRAW";
         }
     }
 }

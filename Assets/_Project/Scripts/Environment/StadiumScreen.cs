@@ -7,45 +7,40 @@ namespace RockyLeague.Environment
 {
     /// <summary>
     /// Giant screen above the stands. It listens to the score (ScoreChanged) and to the
-    /// goals (GoalScored), like the on-screen score: another subscriber that the publishers
-    /// do not know about. After a goal it shows "GOAL!" in the scorer's colour for a moment.
+    /// referee's valid goals (GoalScored), like the on-screen score: another subscriber that
+    /// the publishers do not know about. After a goal it shows "GOAL!" in the scorer's colour for a moment.
     /// </summary>
     public sealed class StadiumScreen : MonoBehaviour
     {
         private const float GoalMessageSeconds = 3f;
 
         private ScoreKeeper _scoreKeeper;
-        private ArenaBuilder _arena;
+        private IGoalSource _goals;
         private TMP_Text _text;
-        private Color _blueColour;
-        private Color _orangeColour;
-        private Goal _blueGoal;
-        private Goal _orangeGoal;
+        private Color _homeColour;
+        private Color _awayColour;
         private float _goalMessageLeft;
 
-        public void Initialize(ScoreKeeper scoreKeeper, ArenaBuilder arena, TMP_Text text, Color blueColour, Color orangeColour)
+        public void Initialize(ScoreKeeper scoreKeeper, IGoalSource goals, TMP_Text text, Color homeColour, Color awayColour)
         {
             _scoreKeeper = scoreKeeper;
-            _arena = arena;
+            _goals = goals;
             _text = text;
-            _blueColour = blueColour;
-            _orangeColour = orangeColour;
+            _homeColour = homeColour;
+            _awayColour = awayColour;
         }
 
         // Start: the score keeper and the goals are ready after every Awake has run.
         private void Start()
         {
-            if (_scoreKeeper == null || _arena == null || _text == null)
+            if (_scoreKeeper == null || _goals == null || _text == null)
             {
                 enabled = false;
                 return;
             }
 
             _scoreKeeper.ScoreChanged += OnScoreChanged;
-            _blueGoal = _arena.GetGoal(Team.Blue);
-            _orangeGoal = _arena.GetGoal(Team.Orange);
-            _blueGoal.GoalScored += OnGoalScored;
-            _orangeGoal.GoalScored += OnGoalScored;
+            _goals.GoalScored += OnGoalScored;
             ShowScore();
         }
 
@@ -55,13 +50,9 @@ namespace RockyLeague.Environment
             {
                 _scoreKeeper.ScoreChanged -= OnScoreChanged;
             }
-            if (_blueGoal != null)
+            if (_goals != null)
             {
-                _blueGoal.GoalScored -= OnGoalScored;
-            }
-            if (_orangeGoal != null)
-            {
-                _orangeGoal.GoalScored -= OnGoalScored;
+                _goals.GoalScored -= OnGoalScored;
             }
         }
 
@@ -79,7 +70,7 @@ namespace RockyLeague.Environment
             }
         }
 
-        private void OnScoreChanged(int blueGoals, int orangeGoals)
+        private void OnScoreChanged(int homeGoals, int awayGoals)
         {
             if (_goalMessageLeft <= 0f)
             {
@@ -89,16 +80,16 @@ namespace RockyLeague.Environment
 
         private void OnGoalScored(object sender, GoalScoredEventArgs e)
         {
-            Color colour = e.ScoringTeam == Team.Blue ? _blueColour : _orangeColour;
+            Color colour = e.ScoringTeam == Team.Home ? _homeColour : _awayColour;
             _text.text = $"{WorldText.ColourTag(colour)}GOAL!</color>";
             _goalMessageLeft = GoalMessageSeconds;
         }
 
         private void ShowScore()
         {
-            int blue = _scoreKeeper.GetGoals(Team.Blue);
-            int orange = _scoreKeeper.GetGoals(Team.Orange);
-            _text.text = $"{WorldText.ColourTag(_blueColour)}{blue}</color>  -  {WorldText.ColourTag(_orangeColour)}{orange}</color>";
+            int home = _scoreKeeper.GetGoals(Team.Home);
+            int away = _scoreKeeper.GetGoals(Team.Away);
+            _text.text = $"{WorldText.ColourTag(_homeColour)}{home}</color>  -  {WorldText.ColourTag(_awayColour)}{away}</color>";
         }
     }
 }
