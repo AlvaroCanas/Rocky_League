@@ -30,6 +30,8 @@ namespace RockyLeague.Environment
         [SerializeField, Tooltip("Glowing material for floodlights and city windows.")]
         private Material _lampMaterial;
         [SerializeField] private Material _waterMaterial;
+        [SerializeField, Tooltip("Additive particle material for the braziers and the goal flame jets.")]
+        private Material _fireMaterial;
 
         [Header("Amounts")]
         [SerializeField, Tooltip("Same seed = same world every time.")]
@@ -74,6 +76,12 @@ namespace RockyLeague.Environment
             decor.BuildFloodlights();
             decor.BuildScreens(_scoreKeeper, _arena);
             decor.BuildAdBoards();
+
+            if (_fireMaterial != null)
+            {
+                FireEffects fire = dynamic.gameObject.AddComponent<FireEffects>();
+                fire.Initialize(_arena, _fireMaterial, layout, _palette.Paint(_colours.Tower));
+            }
 
             LandscapeBuilder landscape = new LandscapeBuilder(sceneryBlocks, dynamic, _palette, layout, _colours, random, _lampMaterial, _waterMaterial);
             landscape.BuildGround();
