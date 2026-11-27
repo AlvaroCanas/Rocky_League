@@ -20,7 +20,13 @@ namespace RockyLeague.Core.Building
         /// <summary>A solid box that things can collide with (walls, floor).</summary>
         public GameObject Solid(string name, Vector3 localCenter, Vector3 size, Material material, PhysicsMaterial physics)
         {
-            GameObject block = Create(PrimitiveType.Cube, name, localCenter, size, Quaternion.identity, material);
+            return Solid(name, localCenter, size, Quaternion.identity, material, physics);
+        }
+
+        /// <summary>A solid box turned in any direction (ramps, diagonal walls).</summary>
+        public GameObject Solid(string name, Vector3 localCenter, Vector3 size, Quaternion localRotation, Material material, PhysicsMaterial physics)
+        {
+            GameObject block = Create(PrimitiveType.Cube, name, localCenter, size, localRotation, material);
             block.GetComponent<Collider>().sharedMaterial = physics;
             return block;
         }

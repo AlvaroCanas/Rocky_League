@@ -106,6 +106,15 @@ namespace RockyLeague.AI
             // The arena is aligned with the world axes: X is the width, Z the length.
             local.x = Mathf.Clamp(local.x, -halfWidth, halfWidth);
             local.z = Mathf.Clamp(local.z, -halfLength, halfLength);
+
+            // Corners are cut at 45 degrees: pull points behind the diagonal wall back in front of it.
+            float overshoot = CornerOvershoot(local, wallMargin);
+            if (overshoot > 0f)
+            {
+                local.x -= Mathf.Sign(local.x) * overshoot * 0.5f;
+                local.z -= Mathf.Sign(local.z) * overshoot * 0.5f;
+            }
+
             return FieldCenter + local;
         }
 
@@ -115,7 +124,25 @@ namespace RockyLeague.AI
             Vector3 local = point - FieldCenter;
             float toSideWall = _arenaSettings.Width * 0.5f - Mathf.Abs(local.x);
             float toEndWall = _arenaSettings.Length * 0.5f - Mathf.Abs(local.z);
-            return toSideWall < margin || toEndWall < margin;
+            return toSideWall < margin || toEndWall < margin || CornerOvershoot(local, margin) > 0f;
+        }
+
+        /// <summary>
+        /// How far a point (relative to the centre) is past the line that stays
+        /// <paramref name="margin"/> in front of a diagonal corner wall; 0 or less = in front of it.
+        /// </summary>
+        private float CornerOvershoot(Vector3 local, float margin)
+        {
+            float corner = _arenaSettings.CornerSize;
+            if (corner <= 0f)
+            {
+                return 0f;
+            }
+
+            // Along the diagonal, x + z grows by sqrt(2) per meter away from the wall.
+            float intoX = Mathf.Abs(local.x) - (_arenaSettings.Width * 0.5f - corner);
+            float intoZ = Mathf.Abs(local.z) - (_arenaSettings.Length * 0.5f - corner);
+            return intoX + intoZ - (corner - margin * Mathf.Sqrt(2f));
         }
 
         private static Vector3 Flat(Vector3 v)

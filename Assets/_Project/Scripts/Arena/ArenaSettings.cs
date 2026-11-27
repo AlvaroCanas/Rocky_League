@@ -26,6 +26,12 @@ namespace RockyLeague.Arena
         [SerializeField, Min(0f), Tooltip("How far behind the goal line a goal starts counting. Use the ball's diameter so the whole ball must cross.")]
         private float _goalLineMargin = 2f;
 
+        [Header("Curves")]
+        [SerializeField, Min(0f), Tooltip("Radius of the curved ramp where the floor meets the walls. 0 = no ramps.")]
+        private float _rampRadius = 4f;
+        [SerializeField, Min(0f), Tooltip("How much of each corner is cut off at 45 degrees. 0 = square corners.")]
+        private float _cornerSize = 10f;
+
         [Header("Surfaces")]
         [SerializeField, Range(0f, 1f), Tooltip("How much the ball bounces off walls.")]
         private float _wallBounciness = 0.5f;
@@ -40,6 +46,9 @@ namespace RockyLeague.Arena
         public float GoalDepth => _goalDepth;
         public float GoalLineMargin => _goalLineMargin;
 
+        public float RampRadius => _rampRadius;
+        public float CornerSize => _cornerSize;
+
         public float WallBounciness => _wallBounciness;
 
         // Keeps the goals smaller than the walls they are cut into.
@@ -48,6 +57,9 @@ namespace RockyLeague.Arena
             _goalWidth = Mathf.Min(_goalWidth, _width - 2f * _wallThickness);
             _goalHeight = Mathf.Min(_goalHeight, _wallHeight - 1f);
             _goalLineMargin = Mathf.Min(_goalLineMargin, _wallThickness + _goalDepth - 0.5f);
+            _rampRadius = Mathf.Min(_rampRadius, _wallHeight * 0.5f);
+            // The corners must leave room for the goal mouth on the end walls.
+            _cornerSize = Mathf.Min(_cornerSize, (_width - _goalWidth) * 0.5f - 1f);
         }
     }
 }
