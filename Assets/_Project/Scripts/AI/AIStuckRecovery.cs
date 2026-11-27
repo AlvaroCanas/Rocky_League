@@ -19,6 +19,13 @@ namespace RockyLeague.AI
         private float _reverseTimeLeft;
         private float _escapeSteer;
 
+        /// <summary>Forgets any stuck time, e.g. while the car is not allowed to move.</summary>
+        public void Reset()
+        {
+            _stuckTime = 0f;
+            _reverseTimeLeft = 0f;
+        }
+
         public CarInputData Apply(CarInputData command, float carSpeed, float deltaTime)
         {
             if (_reverseTimeLeft > 0f)

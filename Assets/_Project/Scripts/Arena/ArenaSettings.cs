@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RockyLeague.Arena
@@ -32,6 +33,19 @@ namespace RockyLeague.Arena
         [SerializeField, Min(0f), Tooltip("How much of each corner is cut off at 45 degrees. 0 = square corners.")]
         private float _cornerSize = 10f;
 
+        [Header("Kickoff")]
+        [SerializeField, Tooltip(
+            "Kickoff spots, described for the Home team as fractions of its half of the field: " +
+            "x = sideways (-1 left wall, 0 middle, 1 right wall, as seen by a Home driver), " +
+            "y = back towards its own goal (0 centre line, 1 goal line). " +
+            "The Away team uses the same spots turned 180 degrees, so both teams always get the same kickoff.")]
+        private Vector2[] _kickoffSpots =
+        {
+            new Vector2(-0.5f, 0.5f),  // diagonal, left
+            new Vector2(0.5f, 0.5f),   // diagonal, right
+            new Vector2(0f, 0.75f)     // centre, further back
+        };
+
         [Header("Surfaces")]
         [SerializeField, Range(0f, 1f), Tooltip("How much the ball bounces off walls.")]
         private float _wallBounciness = 0.5f;
@@ -51,6 +65,9 @@ namespace RockyLeague.Arena
 
         public float WallBounciness => _wallBounciness;
 
+        /// <summary>Kickoff spots of the Home team (see the tooltip of the field for the units).</summary>
+        public IReadOnlyList<Vector2> KickoffSpots => _kickoffSpots;
+
         // Keeps the goals smaller than the walls they are cut into.
         private void OnValidate()
         {
@@ -60,6 +77,12 @@ namespace RockyLeague.Arena
             _rampRadius = Mathf.Min(_rampRadius, _wallHeight * 0.5f);
             // The corners must leave room for the goal mouth on the end walls.
             _cornerSize = Mathf.Min(_cornerSize, (_width - _goalWidth) * 0.5f - 1f);
+
+            // A spot outside its own half would put the car in the rival half or inside a wall.
+            for (int i = 0; i < _kickoffSpots.Length; i++)
+            {
+                _kickoffSpots[i] = new Vector2(Mathf.Clamp(_kickoffSpots[i].x, -1f, 1f), Mathf.Clamp01(_kickoffSpots[i].y));
+            }
         }
     }
 }
