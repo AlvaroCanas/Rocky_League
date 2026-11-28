@@ -55,7 +55,10 @@ namespace RockyLeague.AI.States
 
             CarInputData drive = AISteering.DriveTo(_context, target, arrive: false, allowBoost: aligned);
 
+            // Only from the ground: a press in the air would spend the car's air jump (double
+            // jump or dodge), which the bots do not use on purpose yet.
             bool jump = _context.Difficulty.CanJump
+                && _context.IsCarGrounded
                 && aligned
                 && _context.BallHeight > JumpBallHeight
                 && _context.DistanceToBall < JumpMaxDistance;
