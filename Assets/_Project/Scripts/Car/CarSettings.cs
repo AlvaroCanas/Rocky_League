@@ -12,7 +12,7 @@ namespace RockyLeague.Car
     public sealed class CarSettings : ScriptableObject
     {
         [Header("Rigidbody")]
-        [SerializeField, Min(0.1f)] private float _mass = 180f;
+        [SerializeField, Min(0.1f)] private float _mass = 250f;
         [SerializeField, Tooltip("Offset from the collider centre. Lower = harder to flip over.")]
         private Vector3 _centerOfMassOffset = new Vector3(0f, -0.15f, 0f);
         [SerializeField, Min(0.1f), Tooltip("Max angular speed in rad/s.")]
@@ -31,6 +31,8 @@ namespace RockyLeague.Car
         [Header("Steering")]
         [SerializeField, Min(0f), Tooltip("Yaw rate in rad/s at full steer.")]
         private float _maxYawRate = 2.6f;
+        [SerializeField, Min(0.1f), Tooltip("How fast the turning speed reaches what the steering asks for (rad/s per second). Lower = smoother, slower to react.")]
+        private float _steerResponse = 20f;
         [SerializeField, Tooltip("Steering factor (Y) by normalized forward speed (X, 0..1).")]
         private AnimationCurve _steerBySpeed = new AnimationCurve(
             new Keyframe(0f, 0f),
@@ -64,6 +66,18 @@ namespace RockyLeague.Car
         private float _jumpSpeed = 5f;
         [SerializeField, Min(0f), Tooltip("Seconds before the car can jump again.")]
         private float _jumpCooldown = 1f;
+
+        [Header("Double jump and dodge (one air jump per time in the air)")]
+        [SerializeField, Min(0f), Tooltip("Speed added along the car's up by the double jump (m/s).")]
+        private float _doubleJumpSpeed = 5f;
+        [SerializeField, Min(0f), Tooltip("Speed added along the ground in the dodge direction (m/s).")]
+        private float _dodgeSpeed = 8f;
+        [SerializeField, Min(0.1f), Tooltip("Seconds a dodge takes to spin one full turn. The spin starts fast and slows down to a stop at the end; its speed is worked out from this.")]
+        private float _dodgeDuration = 1f;
+        [SerializeField, Range(0f, 1f), Tooltip("Gravity while the dodge lasts (1 = normal, 0 = the car floats). Low values let the car finish the flip in the air and carry the push further.")]
+        private float _dodgeGravityScale = 0.3f;
+        [SerializeField, Range(0.05f, 1f), Tooltip("Direction (pitch, steer) needed for a dodge; below it, the air jump is a double jump.")]
+        private float _dodgeDeadZone = 0.5f;
 
         [Header("Air control")]
         [SerializeField, Min(0f), Tooltip("Max pitch speed in rad/s (nose up / down).")]
@@ -103,6 +117,7 @@ namespace RockyLeague.Car
         public float CoastDeceleration => _coastDeceleration;
 
         public float MaxYawRate => _maxYawRate;
+        public float SteerResponse => _steerResponse;
         public float LateralGrip => _lateralGrip;
         public float HandbrakeLateralGrip => _handbrakeLateralGrip;
         public float StickyAcceleration => _stickyAcceleration;
@@ -116,6 +131,12 @@ namespace RockyLeague.Car
 
         public float JumpSpeed => _jumpSpeed;
         public float JumpCooldown => _jumpCooldown;
+
+        public float DoubleJumpSpeed => _doubleJumpSpeed;
+        public float DodgeSpeed => _dodgeSpeed;
+        public float DodgeDuration => _dodgeDuration;
+        public float DodgeGravityScale => _dodgeGravityScale;
+        public float DodgeDeadZone => _dodgeDeadZone;
 
         public float AirPitchSpeed => _airPitchSpeed;
         public float AirYawSpeed => _airYawSpeed;

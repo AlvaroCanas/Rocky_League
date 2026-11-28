@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7000301070c048c6a17ab1a8f102f823, type: 3}
   m_Name: ArenaSettings
   m_EditorClassIdentifier: RockyLeague::RockyLeague.Arena.ArenaSettings
-  _width: 60
-  _length: 90
+  _width: 80
+  _length: 100
   _wallHeight: 16
   _wallThickness: 2
   _goalWidth: 14
@@ -22,4 +22,8 @@ MonoBehaviour:
   _goalLineMargin: 2
   _rampRadius: 4
   _cornerSize: 10
+  _kickoffSpots:
+  - {x: -0.5, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  - {x: 0, y: 0.75}
   _wallBounciness: 0.5

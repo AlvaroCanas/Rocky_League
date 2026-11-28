@@ -14,7 +14,7 @@ namespace RockyLeague.Match
     /// <summary>
     /// Builds a match from a <see cref="MatchConfig"/> (Factory pattern): it creates the
     /// human player's car and fills every other place with a bot, gives each bot what it
-    /// needs (team, difficulty, ball, arena) and points the camera at the player.
+    /// needs (team, difficulty, ball, arena) and points the camera at the player and the ball.
     ///
     /// Nobody else creates cars, so the rules for "who plays where" live in a single place:
     /// the player is always Home slot 0; Home's other slots and every Away slot are bots.
@@ -41,7 +41,7 @@ namespace RockyLeague.Match
         [SerializeField] private ArenaBuilder _arena;
         [SerializeField] private Ball _ball;
         [SerializeField, Tooltip("Camera that follows the player's car.")]
-        private CarFollowCamera _camera;
+        private CameraRig _camera;
 
         private readonly List<MatchCar> _cars = new List<MatchCar>();
 
@@ -90,7 +90,7 @@ namespace RockyLeague.Match
 
             if (_camera != null)
             {
-                _camera.SetTarget(player.transform);
+                _camera.SetTargets(player.transform, _ball);
             }
 
             return WithGatedInput(player.GetComponent<CarController>(), player, canDrive);

@@ -4,23 +4,31 @@ using RockyLeague.Core.StateMachines;
 
 namespace RockyLeague.Car.States
 {
-    /// <summary>The car rests on a surface: it can drive, steer, boost and jump.</summary>
+    /// <summary>
+    /// The car rests on a surface: it can drive, steer, boost and jump.
+    /// Touching the ground gives the car its air jump back (<see cref="CarDodge"/>).
+    /// </summary>
     public sealed class GroundedCarState : IState
     {
         private readonly CarMotor _motor;
         private readonly CarBoost _boost;
         private readonly CarJump _jump;
+        private readonly CarDodge _dodge;
         private readonly Func<CarInputData> _readInput;
 
-        public GroundedCarState(CarMotor motor, CarBoost boost, CarJump jump, Func<CarInputData> readInput)
+        public GroundedCarState(CarMotor motor, CarBoost boost, CarJump jump, CarDodge dodge, Func<CarInputData> readInput)
         {
             _motor = motor ?? throw new ArgumentNullException(nameof(motor));
             _boost = boost ?? throw new ArgumentNullException(nameof(boost));
             _jump = jump ?? throw new ArgumentNullException(nameof(jump));
+            _dodge = dodge ?? throw new ArgumentNullException(nameof(dodge));
             _readInput = readInput ?? throw new ArgumentNullException(nameof(readInput));
         }
 
-        public void Enter() { }
+        public void Enter()
+        {
+            _dodge.Refill();
+        }
 
         public void Tick(float deltaTime)
         {

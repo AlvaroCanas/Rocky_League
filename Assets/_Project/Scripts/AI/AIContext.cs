@@ -51,6 +51,7 @@ namespace RockyLeague.AI
         public Vector3 CarPosition => Flat(_car.position);
         public float CarSpeed => _controller.ForwardSpeed;
         public float BoostLeft => _controller.NormalizedBoost;
+        public bool IsCarGrounded => _controller.IsGrounded;
 
         // The ball, as last perceived.
         public Vector3 BallPosition { get; private set; }
