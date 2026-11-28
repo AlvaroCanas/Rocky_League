@@ -12,15 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04887820e8be93e4b9249dcd92585298, type: 3}
   m_Name: CarSettings
   m_EditorClassIdentifier: RockyLeague::RockyLeague.Car.CarSettings
-  _mass: 180
+  _mass: 280
   _centerOfMassOffset: {x: 0, y: -0.15, z: 0}
   _maxAngularSpeed: 5.5
-  _maxDriveSpeed: 14
-  _throttleAcceleration: 16
+  _maxDriveSpeed: 11
+  _throttleAcceleration: 11
   _accelerationAtMaxSpeed: 0.1
   _brakeDeceleration: 35
-  _coastDeceleration: 5
-  _maxYawRate: 2.1
+  _coastDeceleration: 13
+  _maxYawRate: 2.5
+  _steerResponse: 20
   _steerBySpeed:
     serializedVersion: 2
     m_Curve:
@@ -57,6 +58,27 @@ MonoBehaviour:
   _lateralGrip: 15
   _handbrakeLateralGrip: 2
   _stickyAcceleration: 5
+  _maxBoost: 100
+  _startingBoostFraction: 0.33
+  _boostConsumption: 33
+  _boostRecharge: 10
+  _boostAcceleration: 10
+  _maxBoostSpeed: 23
+  _jumpSpeed: 6
+  _jumpCooldown: 1
+  _doubleJumpSpeed: 8
+  _dodgeSpeed: 5
+  _dodgeDuration: 1.2
+  _dodgeGravityScale: 0.5
+  _dodgeDeadZone: 0.5
+  _airPitchSpeed: 3.6
+  _airYawSpeed: 3.2
+  _airRollSpeed: 4.5
+  _airControlAcceleration: 16
+  _airControlDamping: 4
+  _recoveryHopSpeed: 3.5
+  _flippedProbeRadius: 0.15
+  _flippedDelay: 0.2
   _groundCheckDistance: 0.12
   _minGroundedWheels: 3
   _groundLayers:
