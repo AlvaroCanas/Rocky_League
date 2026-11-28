@@ -22,7 +22,7 @@ namespace RockyLeague.Arena
         private float _radius = 1f;
 
         [Header("Physics")]
-        [SerializeField, Min(0.1f), Tooltip("Lighter than a car (180 kg) so cars can push it easily.")]
+        [SerializeField, Min(0.1f), Tooltip("Lighter than a car (CarSettings mass) so cars can push it.")]
         private float _mass = 30f;
         [SerializeField, Min(1f), Tooltip("Speed cap in m/s, so hits never send it through walls.")]
         private float _maxSpeed = 60f;
@@ -40,6 +40,9 @@ namespace RockyLeague.Arena
         public float Radius => _radius;
         public Vector3 Position => _body.position;
         public Vector3 Velocity => _body.linearVelocity;
+
+        /// <summary>False while the ball is hidden (after a goal), so nobody follows or chases it.</summary>
+        public bool IsPresent => _collider != null && _collider.enabled;
 
         /// <summary>
         /// Makes the ball disappear (after a goal): invisible, without collisions and frozen,
