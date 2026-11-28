@@ -37,7 +37,7 @@ namespace RockyLeague.Car
             float forwardSpeed = Vector3.Dot(_body.linearVelocity, forward);
 
             ApplyThrottle(input.Throttle, forward, forwardSpeed, deltaTime);
-            ApplySteering(input.Steer, normal, forwardSpeed);
+            ApplySteering(input.Steer, normal, forwardSpeed, deltaTime);
             ApplyLateralGrip(input.Handbrake, right);
 
             _body.AddForce(-normal * _settings.StickyAcceleration, ForceMode.Acceleration);
@@ -69,16 +69,20 @@ namespace RockyLeague.Car
             _body.AddForce(forward * acceleration, ForceMode.Acceleration);
         }
 
-        private void ApplySteering(float steer, Vector3 normal, float forwardSpeed)
+        private void ApplySteering(float steer, Vector3 normal, float forwardSpeed, float deltaTime)
         {
             float steerFactor = _settings.EvaluateSteerFactor(Mathf.Abs(forwardSpeed) / _settings.MaxDriveSpeed);
             float direction = forwardSpeed >= 0f ? 1f : -1f; // steering is mirrored when reversing
-            float yawRate = steer * _settings.MaxYawRate * steerFactor * direction;
+            float targetYawRate = steer * _settings.MaxYawRate * steerFactor * direction;
 
-            // Replace only the rotation around the surface normal; pitch/roll stay physics-driven.
+            // The turning speed moves towards the target instead of jumping to it, so a key press
+            // (0 to full steer at once) turns the car in smoothly, and releasing it straightens it
+            // out smoothly too. Only the rotation around the surface normal is touched;
+            // pitch/roll stay physics-driven.
             Vector3 angular = _body.angularVelocity;
-            angular = angular - Vector3.Project(angular, normal) + normal * yawRate;
-            _body.angularVelocity = angular;
+            float currentYawRate = Vector3.Dot(angular, normal);
+            float yawRate = Mathf.MoveTowards(currentYawRate, targetYawRate, _settings.SteerResponse * deltaTime);
+            _body.angularVelocity = angular + normal * (yawRate - currentYawRate);
         }
 
         private void ApplyLateralGrip(bool handbrake, Vector3 right)
